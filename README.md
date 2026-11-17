@@ -21,6 +21,16 @@ Für Windows, Linux, macOS (Intel + Apple Silicon) und Android.
 - Responsives Layout: Desktop 3 Spalten (Länder | Sender | Player), Tablet 2 Spalten + Playerleiste, Handy Länderliste → Senderliste mit Mini-Player.
 - Entfernte Sender lassen sich in den Einstellungen wiederherstellen.
 
+## Android
+
+- **Hintergrundwiedergabe**: Vordergrund-Dienst mit Medien-Benachrichtigung, CPU-Wakelock und WLAN-Lock – der Stream läuft auch bei ausgeschaltetem Bildschirm weiter.
+- **Automatisches Neuverbinden**, wenn ein Stream abbricht oder hängen bleibt (z. B. Wechsel WLAN ↔ Mobilfunk).
+- **Audio-Fokus**: pausiert bei Anrufen, wird bei Navigationsansagen leiser, stoppt beim Abziehen des Kopfhörers.
+- **Android Auto**: Favoriten, Zuletzt gehört, Länder → Sender; Sprachsuche („Spiele … auf SlaxxFM“), Weiter/Zurück wechselt den Sender.
+  Da die App nicht aus dem Play Store kommt, muss in Android Auto einmalig *Entwicklereinstellungen → Unbekannte Quellen* aktiviert werden
+  (Entwicklermodus: in Android Auto 10× auf „Version“ tippen).
+- Falls ein Hersteller (Xiaomi, Huawei, Samsung …) die App trotzdem beendet: in den Akku-Einstellungen für SlaxxFM „Nicht optimieren“ wählen.
+
 ## Senderquellen
 
 | Quelle | Inhalt |
