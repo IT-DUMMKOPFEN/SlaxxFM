@@ -14,7 +14,11 @@ Für Windows, Linux, macOS (Intel + Apple Silicon) und Android.
 - **Streams prüfen**: testet jeden Stream wirklich (liefert er Audio?). Nicht funktionierende werden entfernt.
 - **Automatisch aufräumen** (🧹): Doppelte entfernen + alle Streams prüfen + defekte entfernen + VPN markieren – für ein Land oder alle.
 - **VPN-Label** unten rechts: Streams, die mit HTTP 401/403/451 antworten (regional gesperrt), bzw. beim Abspielen „403 Forbidden“ melden.
-- **Player**: Abspielen / Pause, Stopp, Leiser / Lauter + Lautstärkeregler, Favoriten (★).
+- **Player-Leiste** unten: Stopp, Zurück, Abspielen/Pause, Weiter, Favorit; rechts Lautstärkeregler und Stumm-Knopf.
+- **Visualisierung** mit 9 Effekten (Equalizer, Regenbogen, rund, Sternenflug, Sound Wave, Farbwellen, Diskolicht, Diskokugel, Feuerwerk) – Klick wechselt, jeder Effekt einzeln abschaltbar.
+- **Tanzende Leute** im Takt, wenn Musik läuft (BPM-Erkennung, Musik/Sprache-Erkennung; abschaltbar).
+- **Favoriten exportieren/importieren** (SlaxxFM-JSON oder M3U-Playlist).
+- **Hilfe** auf Deutsch und Englisch in der App.
 - **Senderbild + Infos**: Logo, Land, Sprache, Genres, Homepage, Codec, Bitrate, Abtastrate und – sofern der Sender ICY-Metadaten liefert – der aktuelle Titel, ICY-Name/-Genre.
 - **Nur Musiksender** (Einstellung, Standard an): blendet reine Nachrichten-, Talk-, Sport- und Religionssender aus.
 - **Hell / Dunkel / System**, Deutsch / Englisch.
