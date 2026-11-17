@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
+import 'services/audio_analyzer.dart';
 import 'services/audio_handler.dart';
 import 'services/player_service.dart';
 import 'services/settings.dart';
 import 'services/station_repository.dart';
+import 'ui/brand.dart';
 import 'ui/home_page.dart';
-
-const Color kSeed = Color(0xFFB0228C);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,26 +16,10 @@ Future<void> main() async {
   player.init();
   // Android: background playback, media notification, Android Auto
   await initAudioService();
+  analyzer.start();
   runApp(const SlaxxFmApp());
   // loads the cached list (or downloads it on the first start)
   repo.init();
-}
-
-ThemeData _theme(Brightness b) {
-  final scheme = ColorScheme.fromSeed(seedColor: kSeed, brightness: b);
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    scaffoldBackgroundColor:
-        b == Brightness.dark ? const Color(0xFF121016) : scheme.surface,
-    appBarTheme: AppBarTheme(
-      centerTitle: false,
-      scrolledUnderElevation: 0,
-      backgroundColor:
-          b == Brightness.dark ? const Color(0xFF121016) : scheme.surface,
-    ),
-    sliderTheme: const SliderThemeData(trackHeight: 4),
-  );
 }
 
 class SlaxxFmApp extends StatelessWidget {
@@ -49,8 +33,8 @@ class SlaxxFmApp extends StatelessWidget {
         title: 'SlaxxFM',
         debugShowCheckedModeBanner: false,
         themeMode: settings.themeMode,
-        theme: _theme(Brightness.light),
-        darkTheme: _theme(Brightness.dark),
+        theme: buildTheme(Brightness.light),
+        darkTheme: buildTheme(Brightness.dark),
         home: const HomePage(),
       ),
     );

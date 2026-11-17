@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../l10n.dart';
 import '../models/station.dart';
+import '../services/favorites_io.dart';
 import '../services/settings.dart';
 import '../services/station_repository.dart';
+import 'brand.dart';
+import 'help_page.dart';
 import 'settings_page.dart';
+import 'visualizer/visualizer.dart';
 import 'widgets/country_list.dart';
 import 'widgets/player_panel.dart';
 import 'widgets/station_grid.dart';
@@ -141,6 +145,19 @@ class _HomePageState extends State<HomePage> {
     await _showReport(r);
   }
 
+  void _openHelp() => Navigator.of(context)
+      .push(MaterialPageRoute(builder: (_) => const HelpPage()));
+
+  Future<void> _exportFavorites({required bool m3u}) async {
+    final r = await FavoritesIO.export(m3u: m3u);
+    if (r != null) _snack(r);
+  }
+
+  Future<void> _importFavorites() async {
+    final r = await FavoritesIO.import();
+    if (r != null) _snack(r);
+  }
+
   void _openSettings() => Navigator.of(context)
       .push(MaterialPageRoute(builder: (_) => const SettingsPage()));
 
@@ -152,12 +169,12 @@ class _HomePageState extends State<HomePage> {
       showDragHandle: true,
       builder: (_) => FractionallySizedBox(
         heightFactor: .92,
-        child: const PlayerPanel(),
+        child: const PlayerPanel(withControls: true),
       ),
     );
   }
 
-  List<Widget> _actions(bool busy) {
+  List<Widget> _actions(bool busy, {bool compact = false}) {
     final brightness = Theme.of(context).brightness;
     return [
       IconButton(
@@ -165,11 +182,12 @@ class _HomePageState extends State<HomePage> {
         onPressed: busy ? null : _update,
         icon: const Icon(Icons.refresh_rounded),
       ),
-      IconButton(
-        tooltip: tr('clean'),
-        onPressed: busy ? null : _clean,
-        icon: const Icon(Icons.cleaning_services_rounded),
-      ),
+      if (!compact)
+        IconButton(
+          tooltip: tr('clean'),
+          onPressed: busy ? null : _clean,
+          icon: const Icon(Icons.cleaning_services_rounded),
+        ),
       IconButton(
         tooltip: brightness == Brightness.dark
             ? tr('themeLight')
@@ -179,6 +197,12 @@ class _HomePageState extends State<HomePage> {
             ? Icons.light_mode_rounded
             : Icons.dark_mode_rounded),
       ),
+      if (!compact)
+        IconButton(
+          tooltip: tr('help'),
+          onPressed: _openHelp,
+          icon: const Icon(Icons.help_outline_rounded),
+        ),
       PopupMenuButton<String>(
         onSelected: (v) {
           switch (v) {
@@ -192,6 +216,14 @@ class _HomePageState extends State<HomePage> {
               _clean();
             case 'settings':
               _openSettings();
+            case 'export':
+              _exportFavorites(m3u: false);
+            case 'exportM3u':
+              _exportFavorites(m3u: true);
+            case 'import':
+              _importFavorites();
+            case 'help':
+              _openHelp();
           }
         },
         itemBuilder: (_) => [
@@ -220,6 +252,27 @@ class _HomePageState extends State<HomePage> {
                   leading: const Icon(Icons.cleaning_services_rounded),
                   title: Text(tr('clean')))),
           const PopupMenuDivider(),
+          PopupMenuItem(
+              value: 'export',
+              child: ListTile(
+                  leading: const Icon(Icons.upload_file_rounded),
+                  title: Text(tr('exportFav')))),
+          PopupMenuItem(
+              value: 'exportM3u',
+              child: ListTile(
+                  leading: const Icon(Icons.queue_music_rounded),
+                  title: Text(tr('exportFavM3u')))),
+          PopupMenuItem(
+              value: 'import',
+              child: ListTile(
+                  leading: const Icon(Icons.download_rounded),
+                  title: Text(tr('importFav')))),
+          const PopupMenuDivider(),
+          PopupMenuItem(
+              value: 'help',
+              child: ListTile(
+                  leading: const Icon(Icons.help_outline_rounded),
+                  title: Text(tr('help')))),
           PopupMenuItem(
               value: 'settings',
               child: ListTile(
@@ -297,7 +350,7 @@ class _HomePageState extends State<HomePage> {
     }
     return Column(children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         child: Row(children: [
           if (!searching && _country != null) ...[
             CountryFlag(code: _country!, width: 32),
@@ -320,7 +373,7 @@ class _HomePageState extends State<HomePage> {
       ),
       if (!showSearch)
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: _searchField(),
         ),
       Expanded(
@@ -331,15 +384,8 @@ class _HomePageState extends State<HomePage> {
     ]);
   }
 
-  Widget _title() => Row(mainAxisSize: MainAxisSize.min, children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset('assets/logo.png', width: 34, height: 34),
-        ),
-        const SizedBox(width: 10),
-        const Text('SlaxxFM',
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: .5)),
-      ]);
+  Widget _title({bool small = false}) =>
+      BrandTitle(logoSize: small ? 42 : 54);
 
   @override
   Widget build(BuildContext context) {
@@ -354,6 +400,7 @@ class _HomePageState extends State<HomePage> {
         if (width >= 1100) {
           return Scaffold(
             appBar: AppBar(title: _title(), actions: _actions(busy)),
+            bottomNavigationBar: const PlayerBar(),
             body: Column(children: [
               _busyBar(),
               Expanded(
@@ -365,7 +412,7 @@ class _HomePageState extends State<HomePage> {
                   VerticalDivider(width: 1, color: scheme.outlineVariant),
                   Expanded(child: _stationArea(showSearch: true)),
                   VerticalDivider(width: 1, color: scheme.outlineVariant),
-                  const SizedBox(width: 360, child: PlayerPanel()),
+                  SizedBox(width: width >= 1400 ? 440 : 380, child: const PlayerPanel()),
                 ]),
               ),
             ]),
@@ -385,11 +432,24 @@ class _HomePageState extends State<HomePage> {
                     child: CountryList(selected: _country, onSelect: _select),
                   ),
                   VerticalDivider(width: 1, color: scheme.outlineVariant),
-                  Expanded(child: _stationArea(showSearch: width >= 900)),
+                  Expanded(
+                    child: Column(children: [
+                      Expanded(child: _stationArea(showSearch: width >= 900)),
+                      // visualizer strip in the free space above the bar
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: SizedBox(
+                          height: (MediaQuery.sizeOf(context).height * .22)
+                              .clamp(110.0, 220.0),
+                          child: const Visualizer(radius: 16),
+                        ),
+                      ),
+                    ]),
+                  ),
                 ]),
               ),
             ]),
-            bottomNavigationBar: MiniPlayerBar(onOpen: _openPlayerSheet),
+            bottomNavigationBar: const PlayerBar(),
           );
         }
 
@@ -418,8 +478,8 @@ class _HomePageState extends State<HomePage> {
                       }),
                     )
                   : null,
-              title: _title(),
-              actions: _actions(busy),
+              title: _title(small: true),
+              actions: _actions(busy, compact: true),
             ),
             body: Column(children: [
               _busyBar(),

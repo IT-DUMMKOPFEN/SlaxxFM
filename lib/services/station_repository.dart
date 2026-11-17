@@ -498,6 +498,31 @@ class StationRepository extends ChangeNotifier {
     _rebuild();
   }
 
+  /// Adds [list] to the favourites. Stations that are not in the list yet
+  /// (e.g. from another device) are added. Returns the number imported.
+  Future<int> importFavorites(List<Station> list) async {
+    final byId = {for (final s in _all) s.id: s};
+    final byUrl = {for (final s in _all) _normUrl(s.url): s};
+    var added = false;
+    var count = 0;
+    for (final s in list) {
+      final existing = byId[s.id] ?? byUrl[_normUrl(s.url)];
+      final target = existing ?? s;
+      if (existing == null) {
+        _all.add(s);
+        byId[s.id] = s;
+        byUrl[_normUrl(s.url)] = s;
+        added = true;
+      }
+      _removed.remove(target.id);
+      if (_favorites.add(target.id)) count++;
+    }
+    _rebuild();
+    await _saveState();
+    if (added) await _saveStations();
+    return count;
+  }
+
   Future<void> restoreRemoved() async {
     _removed.clear();
     _status.removeWhere((_, v) => v == StreamStatus.dead);

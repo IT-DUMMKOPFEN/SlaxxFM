@@ -1,13 +1,26 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 
 import '../l10n.dart';
+import '../services/favorites_io.dart';
 import '../services/settings.dart';
 import '../services/station_repository.dart';
+import 'help_page.dart';
+import 'visualizer/visualizer.dart' show effectName;
 
-const String kAppVersion = '1.1.0';
+const String kAppVersion = '1.2.0';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
+
+  static Future<void> _run(BuildContext context, Future<String?> job) async {
+    final msg = await job;
+    if (msg != null && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,9 +148,64 @@ class SettingsPage extends StatelessWidget {
                     subtitle: Text(
                         '${repo.visibleCount} / ${repo.totalCount} ${tr('stations')}'),
                   ),
+                  header(tr('visualizer')),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Text(tr('visualizerSub'),
+                        style: theme.textTheme.bodySmall),
+                  ),
+                  for (final id in kAllEffects)
+                    CheckboxListTile(
+                      dense: true,
+                      title: Text(effectName(id)),
+                      value: settings.effects.contains(id),
+                      onChanged: (v) =>
+                          settings.setEffectEnabled(id, v ?? false),
+                    ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.accessibility_new_rounded),
+                    title: Text(tr('dancers')),
+                    subtitle: Text(tr('dancersSub')),
+                    value: settings.dancers,
+                    onChanged: settings.setDancers,
+                  ),
+                  if (Platform.isAndroid)
+                    SwitchListTile(
+                      secondary: const Icon(Icons.graphic_eq_rounded),
+                      title: Text(tr('realAnalysis')),
+                      subtitle: Text(tr('realAnalysisSub')),
+                      value: settings.realAnalysis,
+                      onChanged: settings.setRealAnalysis,
+                    ),
+                  header(tr('favorites')),
+                  ListTile(
+                    leading: const Icon(Icons.upload_file_rounded),
+                    title: Text(tr('exportFav')),
+                    onTap: () => _run(context, FavoritesIO.export(m3u: false)),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.queue_music_rounded),
+                    title: Text(tr('exportFavM3u')),
+                    onTap: () => _run(context, FavoritesIO.export(m3u: true)),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.download_rounded),
+                    title: Text(tr('importFav')),
+                    subtitle: Text(tr('importFavSub')),
+                    onTap: () => _run(context, FavoritesIO.import()),
+                  ),
+                  header(tr('help')),
+                  ListTile(
+                    leading: const Icon(Icons.help_outline_rounded),
+                    title: Text(tr('helpOpen')),
+                    onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const HelpPage())),
+                  ),
                   header(tr('about')),
                   ListTile(
-                    leading: Image.asset('assets/logo.png', width: 44),
+                    leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.asset('assets/logo.png', width: 48)),
                     title: const Text('SlaxxFM'),
                     subtitle: Text(tr('aboutText', {'v': kAppVersion})),
                     isThreeLine: true,

@@ -5,6 +5,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum SortMode { popular, name, bitrate }
 
+/// All visualizer effects in display order.
+const List<String> kAllEffects = [
+  'bars',
+  'rainbow',
+  'radial',
+  'stars',
+  'wave',
+  'colorwave',
+  'disco',
+  'discoball',
+  'fireworks',
+];
+
 class AppSettings extends ChangeNotifier {
   late SharedPreferences _p;
 
@@ -22,6 +35,17 @@ class AppSettings extends ChangeNotifier {
   /// Recently played station ids (newest first).
   List<String> recent = [];
 
+  bool muted = false;
+
+  /// Visualizer effects that are switched on (ids, see visualizer.dart).
+  Set<String> effects = {};
+  String currentEffect = '';
+  bool dancers = true;
+
+  /// Android: real spectrum via android.media.audiofx.Visualizer
+  /// (needs the microphone permission).
+  bool realAnalysis = false;
+
   Future<void> load() async {
     _p = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[
@@ -35,6 +59,12 @@ class AppSettings extends ChangeNotifier {
     lastCountry = _p.getString('lastCountry') ?? '';
     parallelChecks = _p.getInt('parallelChecks') ?? 16;
     recent = _p.getStringList('recent') ?? [];
+    muted = _p.getBool('muted') ?? false;
+    final eff = _p.getStringList('effects');
+    effects = eff == null ? kAllEffects.toSet() : eff.toSet();
+    currentEffect = _p.getString('currentEffect') ?? kAllEffects.first;
+    dancers = _p.getBool('dancers') ?? true;
+    realAnalysis = _p.getBool('realAnalysis') ?? false;
   }
 
   String get effectiveLanguage {
@@ -90,6 +120,52 @@ class AppSettings extends ChangeNotifier {
   void saveVolume(double v) {
     volume = v;
     _p.setDouble('volume', v);
+  }
+
+  void setMuted(bool v) {
+    muted = v;
+    _p.setBool('muted', v);
+    notifyListeners();
+  }
+
+  void setEffectEnabled(String id, bool on) {
+    if (on) {
+      effects.add(id);
+    } else {
+      effects.remove(id);
+    }
+    _p.setStringList('effects', effects.toList());
+    notifyListeners();
+  }
+
+  /// Enabled effects in their fixed order.
+  List<String> get enabledEffects =>
+      kAllEffects.where(effects.contains).toList();
+
+  void setCurrentEffect(String id) {
+    currentEffect = id;
+    _p.setString('currentEffect', id);
+    notifyListeners();
+  }
+
+  /// Switches to the next enabled effect (mouse click on the visualizer).
+  void nextEffect() {
+    final list = enabledEffects;
+    if (list.isEmpty) return;
+    final i = list.indexOf(currentEffect);
+    setCurrentEffect(list[(i + 1) % list.length]);
+  }
+
+  void setDancers(bool v) {
+    dancers = v;
+    _p.setBool('dancers', v);
+    notifyListeners();
+  }
+
+  void setRealAnalysis(bool v) {
+    realAnalysis = v;
+    _p.setBool('realAnalysis', v);
+    notifyListeners();
   }
 
   void addRecent(String id) {

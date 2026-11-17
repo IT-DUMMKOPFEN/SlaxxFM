@@ -19,21 +19,25 @@ class StationLogo extends StatelessWidget {
     final logo = station.logo;
     if (logo.startsWith('http') && !logo.toLowerCase().endsWith('.svg')) {
       final dpr = MediaQuery.devicePixelRatioOf(context);
-      child = Container(
-        color: Colors.white,
-        child: Image.network(
-          logo,
-          width: size,
-          height: size,
-          fit: BoxFit.contain,
-          cacheWidth: (size * dpr).round().clamp(32, 512),
-          filterQuality: FilterQuality.medium,
-          gaplessPlayback: true,
-          headers: const {'User-Agent': 'SlaxxFM/1.0'},
-          errorBuilder: (_, __, ___) => fallback,
-          frameBuilder: (context, child, frame, sync) =>
-              frame == null && !sync ? fallback : child,
-        ),
+      // every logo sits in the same white square with the same margin,
+      // so all tiles look alike regardless of the image format
+      child = Image.network(
+        logo,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        cacheWidth: (size * dpr).round().clamp(32, 512),
+        filterQuality: FilterQuality.medium,
+        gaplessPlayback: true,
+        headers: const {'User-Agent': 'SlaxxFM/1.0'},
+        frameBuilder: (context, img, frame, sync) => frame == null && !sync
+            ? fallback
+            : Container(
+                color: Colors.white,
+                padding: EdgeInsets.all(size * .1),
+                child: img,
+              ),
+        errorBuilder: (_, __, ___) => fallback,
       );
     }
     return ClipRRect(
@@ -48,14 +52,15 @@ class _Fallback extends StatelessWidget {
   final double size;
   const _Fallback({required this.name, required this.size});
 
+  // blue tones of the SlaxxFM logo
   static const _palettes = [
-    [Color(0xFFB0228C), Color(0xFF5B2EFF)],
-    [Color(0xFFFF6B35), Color(0xFFE91E63)],
-    [Color(0xFF00B4DB), Color(0xFF0083B0)],
-    [Color(0xFF11998E), Color(0xFF38EF7D)],
-    [Color(0xFFFC466B), Color(0xFF3F5EFB)],
-    [Color(0xFFF7971E), Color(0xFFFFD200)],
-    [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+    [Color(0xFF0D2547), Color(0xFF2F7FCF)],
+    [Color(0xFF123A6B), Color(0xFF4FA3E0)],
+    [Color(0xFF1B4A80), Color(0xFF7CC4F2)],
+    [Color(0xFF0A1A33), Color(0xFF3B6EA8)],
+    [Color(0xFF26446B), Color(0xFF8FA9C8)],
+    [Color(0xFF1A2F5A), Color(0xFF5C7FD6)],
+    [Color(0xFF0E3550), Color(0xFF3FB3D9)],
   ];
 
   @override

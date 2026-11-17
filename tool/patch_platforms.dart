@@ -31,7 +31,9 @@ const _permissions = '''
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>''';
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>''';
 
 const _services = '''
         <!-- background playback (audio_service) + Android Auto media browser -->
@@ -58,11 +60,16 @@ const _services = '''
 String mainActivity(String pkg) => '''
 package $pkg
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.media.audiofx.Visualizer
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.PowerManager
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : AudioServiceActivity() {
@@ -76,6 +83,83 @@ class MainActivity : AudioServiceActivity() {
                     else -> result.notImplemented()
                 }
             }
+        // real spectrum for the visualizer (opt-in in the app settings)
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "slaxxfm/visualizer")
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                    if (Build.VERSION.SDK_INT >= 23 &&
+                        checkSelfPermission(Manifest.permission.RECORD_AUDIO) !=
+                        PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 4711)
+                        events.error("permission", "RECORD_AUDIO not granted", null)
+                        return
+                    }
+                    AudioTap.start(events)
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    AudioTap.stop()
+                }
+            })
+    }
+}
+
+/** Reads the spectrum of the device audio output (32 log bands + level). */
+object AudioTap {
+    private var vis: Visualizer? = null
+
+    fun start(events: EventChannel.EventSink) {
+        stop()
+        try {
+            val v = Visualizer(0)
+            v.enabled = false
+            v.captureSize = Visualizer.getCaptureSizeRange()[1].coerceAtMost(1024)
+            v.setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
+                override fun onWaveFormDataCapture(vz: Visualizer?, waveform: ByteArray?, samplingRate: Int) {}
+
+                override fun onFftDataCapture(vz: Visualizer?, fft: ByteArray?, samplingRate: Int) {
+                    if (fft == null || fft.size < 8) return
+                    events.success(bands(fft, samplingRate / 1000.0))
+                }
+            }, Visualizer.getMaxCaptureRate(), false, true)
+            v.enabled = true
+            vis = v
+        } catch (e: Exception) {
+            events.error("visualizer", e.message, null)
+        }
+    }
+
+    fun stop() {
+        try {
+            vis?.enabled = false
+            vis?.release()
+        } catch (e: Exception) {
+        }
+        vis = null
+    }
+
+    private fun bands(fft: ByteArray, sampleRate: Double): DoubleArray {
+        val n = fft.size / 2
+        val out = DoubleArray(33)
+        val nyq = if (sampleRate > 0) sampleRate / 2 else 22050.0
+        var total = 0.0
+        for (b in 0 until 32) {
+            val f0 = 40.0 * Math.pow(16000.0 / 40.0, b / 32.0)
+            val f1 = 40.0 * Math.pow(16000.0 / 40.0, (b + 1) / 32.0)
+            val k0 = (f0 / nyq * n).toInt().coerceIn(1, n - 1)
+            val k1 = (f1 / nyq * n).toInt().coerceIn(k0 + 1, n)
+            var sum = 0.0
+            for (k in k0 until k1) {
+                val re = fft[2 * k].toDouble()
+                val im = fft[2 * k + 1].toDouble()
+                sum += Math.hypot(re, im)
+            }
+            val avg = sum / (k1 - k0)
+            out[b] = avg
+            total += avg
+        }
+        out[32] = total / 32
+        return out
     }
 }
 
@@ -152,9 +236,16 @@ void main() {
     'macos/Runner/Release.entitlements'
   ]) {
     patch(f, (s) {
-      if (s.contains('com.apple.security.network.client')) return s;
-      return s.replaceFirst(RegExp(r'</dict>\s*</plist>'),
-          '\t<key>com.apple.security.network.client</key>\n\t<true/>\n</dict>\n</plist>');
+      if (!s.contains('com.apple.security.network.client')) {
+        s = s.replaceFirst(RegExp(r'</dict>\s*</plist>'),
+            '\t<key>com.apple.security.network.client</key>\n\t<true/>\n</dict>\n</plist>');
+      }
+      // export / import of favourites (save + open dialogs)
+      if (!s.contains('com.apple.security.files.user-selected.read-write')) {
+        s = s.replaceFirst(RegExp(r'</dict>\s*</plist>'),
+            '\t<key>com.apple.security.files.user-selected.read-write</key>\n\t<true/>\n</dict>\n</plist>');
+      }
+      return s;
     });
   }
   patch('macos/Runner/Configs/AppInfo.xcconfig',

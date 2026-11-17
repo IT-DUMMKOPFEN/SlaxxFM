@@ -67,7 +67,7 @@ class PlayerService extends ChangeNotifier {
       ),
     );
     volume = settings.volume;
-    _player.setVolume(volume);
+    _applyVolume();
     _configureMpv();
     _subs.addAll([
       _player.stream.playing.listen((v) {
@@ -75,10 +75,7 @@ class PlayerService extends ChangeNotifier {
         notifyListeners();
       }),
       _player.stream.buffering.listen(_onBuffering),
-      _player.stream.volume.listen((v) {
-        if (!_ducked) volume = v;
-        notifyListeners();
-      }),
+      _player.stream.volume.listen((_) => notifyListeners()),
       _player.stream.error.listen(_onError),
       _player.stream.completed.listen((done) {
         if (done) _onStreamEnded();
@@ -105,6 +102,12 @@ class PlayerService extends ChangeNotifier {
           'reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=30');
       await native.setProperty('cache', 'yes');
       await native.setProperty('cache-pause-initial', 'yes');
+      if (Platform.isLinux) {
+        // system libmpv on Linux ships all ffmpeg filters: measure the
+        // loudness for the visualizer (astats passes the audio unchanged)
+        await native.setProperty(
+            'af', '@slxstats:lavfi=[astats=metadata=1:reset=1]');
+      }
     } catch (_) {
       // optional tuning only
     }
@@ -140,7 +143,36 @@ class PlayerService extends ChangeNotifier {
 
   void _duck(bool on) {
     _ducked = on;
-    _player.setVolume(on ? volume * 0.3 : volume);
+    _applyVolume();
+  }
+
+  bool get muted => settings.muted;
+
+  bool get recentIsEmpty => settings.recent.isEmpty;
+
+  void _applyVolume() {
+    final v = settings.muted
+        ? 0.0
+        : _ducked
+            ? volume * 0.3
+            : volume;
+    _player.setVolume(v);
+  }
+
+  void toggleMute() {
+    settings.setMuted(!settings.muted);
+    _applyVolume();
+    notifyListeners();
+  }
+
+  /// Raw mpv property (used by the audio analyzer), null if unavailable.
+  Future<String?> mpvProperty(String name) async {
+    try {
+      final dynamic native = _player.platform;
+      return await native.getProperty(name) as String;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _setLocks(bool on) async {
@@ -247,7 +279,8 @@ class PlayerService extends ChangeNotifier {
     v = v.clamp(0, 100).toDouble();
     volume = v;
     settings.saveVolume(v);
-    if (!_ducked) await _player.setVolume(v);
+    if (settings.muted && v > 0) settings.setMuted(false);
+    _applyVolume();
     notifyListeners();
   }
 
