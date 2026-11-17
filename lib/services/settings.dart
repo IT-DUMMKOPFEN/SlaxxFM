@@ -19,6 +19,9 @@ class AppSettings extends ChangeNotifier {
   String lastCountry = '';
   int parallelChecks = 16;
 
+  /// Recently played station ids (newest first).
+  List<String> recent = [];
+
   Future<void> load() async {
     _p = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[
@@ -31,6 +34,7 @@ class AppSettings extends ChangeNotifier {
     volume = _p.getDouble('volume') ?? 70;
     lastCountry = _p.getString('lastCountry') ?? '';
     parallelChecks = _p.getInt('parallelChecks') ?? 16;
+    recent = _p.getStringList('recent') ?? [];
   }
 
   String get effectiveLanguage {
@@ -86,6 +90,13 @@ class AppSettings extends ChangeNotifier {
   void saveVolume(double v) {
     volume = v;
     _p.setDouble('volume', v);
+  }
+
+  void addRecent(String id) {
+    recent.remove(id);
+    recent.insert(0, id);
+    if (recent.length > 30) recent = recent.sublist(0, 30);
+    _p.setStringList('recent', recent);
   }
 
   void saveLastCountry(String cc) {

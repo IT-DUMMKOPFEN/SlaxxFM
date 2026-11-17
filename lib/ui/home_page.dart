@@ -334,7 +334,7 @@ class _HomePageState extends State<HomePage> {
   Widget _title() => Row(mainAxisSize: MainAxisSize.min, children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.asset('assets/icon/icon.png', width: 30, height: 30),
+          child: Image.asset('assets/logo.png', width: 34, height: 34),
         ),
         const SizedBox(width: 10),
         const Text('SlaxxFM',

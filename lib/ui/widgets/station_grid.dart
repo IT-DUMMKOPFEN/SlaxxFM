@@ -48,14 +48,17 @@ class StationGrid extends StatelessWidget {
         childAspectRatio: .78,
       ),
       itemCount: stations.length,
-      itemBuilder: (context, i) => StationTile(station: stations[i]),
+      itemBuilder: (context, i) =>
+          StationTile(station: stations[i], queue: stations),
     );
   }
 }
 
 class StationTile extends StatelessWidget {
   final Station station;
-  const StationTile({super.key, required this.station});
+  final List<Station> queue;
+  const StationTile(
+      {super.key, required this.station, this.queue = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +81,7 @@ class StationTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () => player.play(station),
+            onTap: () => player.play(station, queue: queue),
             child: Stack(
               children: [
                 Padding(
@@ -151,7 +154,7 @@ class StationTile extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        player.playing
+                        player.active
                             ? Icons.graphic_eq_rounded
                             : Icons.pause_rounded,
                         size: 14,

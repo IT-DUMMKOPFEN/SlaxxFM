@@ -4,7 +4,7 @@ import '../l10n.dart';
 import '../services/settings.dart';
 import '../services/station_repository.dart';
 
-const String kAppVersion = '1.0.0';
+const String kAppVersion = '1.1.0';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -137,7 +137,7 @@ class SettingsPage extends StatelessWidget {
                   ),
                   header(tr('about')),
                   ListTile(
-                    leading: Image.asset('assets/icon/icon.png', width: 40),
+                    leading: Image.asset('assets/logo.png', width: 44),
                     title: const Text('SlaxxFM'),
                     subtitle: Text(tr('aboutText', {'v': kAppVersion})),
                     isThreeLine: true,

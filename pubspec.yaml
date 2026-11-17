@@ -1,7 +1,7 @@
 name: slaxxfm
 description: "SlaxxFM – a slim player for free internet music radio stations, sorted by country."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -16,6 +16,8 @@ dependencies:
   path_provider: ^2.1.4
   shared_preferences: ^2.3.2
   url_launcher: ^6.3.0
+  audio_service: ^0.18.15
+  audio_session: ^0.1.21
 
 dev_dependencies:
   flutter_test:
@@ -27,11 +29,13 @@ flutter:
   uses-material-design: true
   assets:
     - assets/curated_stations.json
-    - assets/icon/icon.png
+    - assets/logo.png
 
 flutter_launcher_icons:
-  image_path: "assets/icon/icon.png"
   android: true
+  image_path: "assets/icon/icon_square.png"
+  adaptive_icon_background: "assets/icon/adaptive_bg.png"
+  adaptive_icon_foreground: "assets/icon/adaptive_fg.png"
   min_sdk_android: 21
   windows:
     generate: true
@@ -39,4 +43,4 @@ flutter_launcher_icons:
     icon_size: 256
   macos:
     generate: true
-    image_path: "assets/icon/icon.png"
+    image_path: "assets/icon/icon_desktop.png"

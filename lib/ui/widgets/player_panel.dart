@@ -26,7 +26,7 @@ class PlayerControls extends StatelessWidget {
     final playBtn = IconButton.filled(
       iconSize: compact ? 26 : 40,
       onPressed: has ? player.togglePlay : null,
-      icon: player.buffering && player.playing
+      icon: player.active && (player.buffering || !player.playing)
           ? SizedBox(
               width: compact ? 26 : 40,
               height: compact ? 26 : 40,
@@ -36,7 +36,7 @@ class PlayerControls extends StatelessWidget {
                     strokeWidth: 3, color: scheme.onPrimary),
               ),
             )
-          : Icon(player.playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+          : Icon(player.active ? Icons.pause_rounded : Icons.play_arrow_rounded),
     );
     if (compact) {
       return Row(mainAxisSize: MainAxisSize.min, children: [
@@ -56,9 +56,19 @@ class PlayerControls extends StatelessWidget {
               onPressed: has ? player.stop : null,
               icon: const Icon(Icons.stop_rounded),
             ),
-            const SizedBox(width: 12),
+            IconButton(
+              iconSize: 30,
+              onPressed: has ? player.previous : null,
+              icon: const Icon(Icons.skip_previous_rounded),
+            ),
+            const SizedBox(width: 6),
             playBtn,
-            const SizedBox(width: 12),
+            const SizedBox(width: 6),
+            IconButton(
+              iconSize: 30,
+              onPressed: has ? player.next : null,
+              icon: const Icon(Icons.skip_next_rounded),
+            ),
             IconButton(
               iconSize: 28,
               onPressed: player.current == null
@@ -118,9 +128,11 @@ class PlayerPanel extends StatelessWidget {
         if (s == null) {
           return Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.radio_rounded,
-                  size: 72, color: theme.colorScheme.outline),
-              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset('assets/logo.png', width: 200, height: 200),
+              ),
+              const SizedBox(height: 16),
               Text(tr('nothingPlaying'), style: theme.textTheme.titleMedium),
               const SizedBox(height: 24),
               const Padding(
@@ -164,7 +176,7 @@ class PlayerPanel extends StatelessWidget {
             Text(
               player.error != null
                   ? player.error!
-                  : player.buffering && player.playing
+                  : player.active && (player.buffering || !player.playing)
                       ? tr('buffering')
                       : player.nowPlaying,
               textAlign: TextAlign.center,
@@ -369,7 +381,8 @@ class MiniPlayerBar extends StatelessWidget {
                         if (s != null)
                           Text(
                             player.error ??
-                                (player.buffering && player.playing
+                                (player.active &&
+                                        (player.buffering || !player.playing)
                                     ? tr('buffering')
                                     : player.nowPlaying),
                             maxLines: 1,

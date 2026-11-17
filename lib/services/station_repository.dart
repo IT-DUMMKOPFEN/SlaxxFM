@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -58,6 +59,11 @@ class StationRepository extends ChangeNotifier {
 
   Directory? _dir;
 
+  final Completer<void> _ready = Completer<void>();
+
+  /// Completes as soon as the cached (or bundled) station list is loaded.
+  Future<void> get ready => _ready.future;
+
   int get totalCount => _all.length;
   int get visibleCount => _visible.length;
   int get removedCount => _removed.length;
@@ -109,9 +115,11 @@ class StationRepository extends ChangeNotifier {
         _all = await curated.loadBundled();
       } catch (_) {}
       _rebuild();
+      if (!_ready.isCompleted) _ready.complete();
       await update();
     } else {
       _rebuild();
+      if (!_ready.isCompleted) _ready.complete();
     }
   }
 

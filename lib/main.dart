@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
+import 'services/audio_handler.dart';
 import 'services/player_service.dart';
 import 'services/settings.dart';
 import 'services/station_repository.dart';
@@ -13,6 +14,8 @@ Future<void> main() async {
   MediaKit.ensureInitialized();
   await settings.load();
   player.init();
+  // Android: background playback, media notification, Android Auto
+  await initAudioService();
   runApp(const SlaxxFmApp());
   // loads the cached list (or downloads it on the first start)
   repo.init();
