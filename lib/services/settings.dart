@@ -16,6 +16,19 @@ const List<String> kAllEffects = [
   'disco',
   'discoball',
   'fireworks',
+  'lasers',
+  'tunnel',
+  'synthwave',
+  'vu',
+  'ripples',
+  'aurora',
+  'kaleido',
+  'plasma',
+  'mountains',
+  'bubbles',
+  'spiral',
+  'leds',
+  'orbits',
 ];
 
 class AppSettings extends ChangeNotifier {
@@ -62,6 +75,14 @@ class AppSettings extends ChangeNotifier {
     muted = _p.getBool('muted') ?? false;
     final eff = _p.getStringList('effects');
     effects = eff == null ? kAllEffects.toSet() : eff.toSet();
+    // effects added in a newer version start switched on
+    final known = _p.getStringList('knownEffects') ??
+        (eff == null ? kAllEffects : kAllEffects.take(9).toList());
+    for (final e in kAllEffects) {
+      if (!known.contains(e)) effects.add(e);
+    }
+    _p.setStringList('knownEffects', kAllEffects);
+    _p.setStringList('effects', effects.toList());
     currentEffect = _p.getString('currentEffect') ?? kAllEffects.first;
     dancers = _p.getBool('dancers') ?? true;
     realAnalysis = _p.getBool('realAnalysis') ?? false;

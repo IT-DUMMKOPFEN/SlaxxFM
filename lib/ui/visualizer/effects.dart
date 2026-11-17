@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/audio_analyzer.dart';
 import '../brand.dart';
+import 'effects2.dart';
 
 /// One visualizer effect. Instances keep their own animation state.
 abstract class VisEffect {
@@ -20,6 +21,19 @@ VisEffect createEffect(String id) => switch (id) {
       'disco' => DiscoLightsEffect(),
       'discoball' => DiscoBallEffect(),
       'fireworks' => FireworksEffect(),
+      'lasers' => LasersEffect(),
+      'tunnel' => TunnelEffect(),
+      'synthwave' => SynthwaveEffect(),
+      'vu' => VuMeterEffect(),
+      'ripples' => RipplesEffect(),
+      'aurora' => AuroraEffect(),
+      'kaleido' => KaleidoEffect(),
+      'plasma' => PlasmaEffect(),
+      'mountains' => MountainsEffect(),
+      'bubbles' => BubblesEffect(),
+      'spiral' => SpiralEffect(),
+      'leds' => LedEffect(),
+      'orbits' => OrbitsEffect(),
       _ => BarsEffect(),
     };
 
