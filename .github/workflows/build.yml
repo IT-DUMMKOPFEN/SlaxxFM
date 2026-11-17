@@ -1,0 +1,101 @@
+name: Build SlaxxFM
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: windows }
+          - { os: ubuntu-22.04,   target: linux }
+          - { os: macos-latest,   target: macos }
+          - { os: ubuntu-latest,  target: android }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - if: matrix.target == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libmpv-dev mpv
+
+      - name: Create platform folders
+        run: flutter create --org de.itdummkopfen --project-name slaxxfm --platforms=windows,linux,macos,android .
+
+      - run: flutter pub get
+      - run: dart run tool/patch_platforms.dart
+      - run: dart run flutter_launcher_icons
+
+      # ---------------- Windows
+      - if: matrix.target == 'windows'
+        run: |
+          flutter build windows --release
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath SlaxxFM-windows-x64.zip
+        shell: pwsh
+
+      # ---------------- Linux
+      - if: matrix.target == 'linux'
+        run: |
+          flutter build linux --release
+          cp assets/icon/icon.png build/linux/x64/release/bundle/slaxxfm.png
+          tar -czf SlaxxFM-linux-x64.tar.gz -C build/linux/x64/release bundle
+
+      # ---------------- macOS (universal: Intel + Apple Silicon)
+      - if: matrix.target == 'macos'
+        run: |
+          flutter build macos --release
+          cd build/macos/Build/Products/Release
+          APP=$(ls -d *.app | head -n1)
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$GITHUB_WORKSPACE/SlaxxFM-macos-universal.zip"
+
+      # ---------------- Android
+      - if: matrix.target == 'android'
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk SlaxxFM-android-universal.apk
+          flutter build apk --release --split-per-abi
+          for f in build/app/outputs/flutter-apk/app-*-release.apk; do
+            abi=$(basename "$f" | sed -e 's/app-//' -e 's/-release.apk//')
+            cp "$f" "SlaxxFM-android-$abi.apk"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SlaxxFM-${{ matrix.target }}
+          path: |
+            SlaxxFM-*.zip
+            SlaxxFM-*.tar.gz
+            SlaxxFM-*.apk
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
