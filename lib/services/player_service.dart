@@ -69,6 +69,7 @@ class PlayerService extends ChangeNotifier {
     volume = settings.volume;
     _applyVolume();
     _configureMpv();
+    settings.addListener(_applyBuffer);
     _subs.addAll([
       _player.stream.playing.listen((v) {
         playing = v;
@@ -101,7 +102,8 @@ class PlayerService extends ChangeNotifier {
       await native.setProperty('stream-lavf-o',
           'reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=30');
       await native.setProperty('cache', 'yes');
-      await native.setProperty('cache-pause-initial', 'yes');
+      await native.setProperty('cache-secs', '60');
+      await _applyBuffer();
       if (Platform.isLinux) {
         // system libmpv on Linux ships all ffmpeg filters: measure the
         // loudness for the visualizer (astats passes the audio unchanged)
@@ -111,6 +113,28 @@ class PlayerService extends ChangeNotifier {
     } catch (_) {
       // optional tuning only
     }
+  }
+
+  int _appliedBuffer = -1;
+
+  /// Buffer: playback starts only when [settings.bufferSecs] seconds are
+  /// in the cache and runs that far behind the live edge, so short
+  /// dropouts of the stream are bridged without the user noticing.
+  Future<void> _applyBuffer() async {
+    final secs = settings.bufferSecs;
+    if (secs == _appliedBuffer) return;
+    _appliedBuffer = secs;
+    try {
+      final dynamic native = _player.platform;
+      if (secs > 0) {
+        await native.setProperty('cache-pause-initial', 'yes');
+        await native.setProperty('cache-pause-wait', '$secs');
+        await native.setProperty('demuxer-readahead-secs', '${secs + 30}');
+      } else {
+        await native.setProperty('cache-pause-initial', 'no');
+        await native.setProperty('cache-pause-wait', '1');
+      }
+    } catch (_) {}
   }
 
   Future<void> _initAudioSession() async {

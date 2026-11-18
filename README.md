@@ -16,7 +16,8 @@ Für Windows, Linux, macOS (Intel + Apple Silicon) und Android.
 - **VPN-Label** unten rechts: Streams, die mit HTTP 401/403/451 antworten (regional gesperrt), bzw. beim Abspielen „403 Forbidden“ melden.
 - **Player-Leiste** unten: Stopp, Zurück, Abspielen/Pause, Weiter, Favorit; rechts Lautstärkeregler und Stumm-Knopf.
 - **Visualisierung** mit 9 Effekten (Equalizer, Regenbogen, rund, Sternenflug, Sound Wave, Farbwellen, Diskolicht, Diskokugel, Feuerwerk) – Klick wechselt, jeder Effekt einzeln abschaltbar.
-- **Tanzende Leute** im Takt, wenn Musik läuft (BPM-Erkennung, Musik/Sprache-Erkennung; abschaltbar).
+- **Tanzfläche**: eine Menge schwarzer Silhouetten in drei Reihen mit natürlichen Bewegungen echter Tänzer (Umrisse aus freien Green-Screen-Videos, `tool/extract_dancers.py`), Tempo passend zu den BPM; abschaltbar.
+- **Puffer** 0 / 3 / 5 Sekunden (Standard 3 s) gegen kurze Stream-Aussetzer.
 - **Favoriten exportieren/importieren** (SlaxxFM-JSON oder M3U-Playlist).
 - **Hilfe** auf Deutsch und Englisch in der App.
 - **Senderbild + Infos**: Logo, Land, Sprache, Genres, Homepage, Codec, Bitrate, Abtastrate und – sofern der Sender ICY-Metadaten liefert – der aktuelle Titel, ICY-Name/-Genre.

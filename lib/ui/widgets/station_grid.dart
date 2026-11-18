@@ -35,23 +35,34 @@ class StationGrid extends StatelessWidget {
   const StationGrid({super.key, required this.stations});
 
   /// Height of the text block below the logo.
-  static const double textBlock = 70;
+  static double textBlock(bool compact) => compact ? 34 : 70;
+
+  /// Inner padding of a tile.
+  static double tilePad(bool compact) => compact ? 7 : 12;
+
+  /// Smaller windows (and phones) get tiles half the size.
+  static bool isCompact(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < 1100;
 
   @override
   Widget build(BuildContext context) {
     if (stations.isEmpty) {
       return Center(child: Text(tr('noStations')));
     }
+    final compact = isCompact(context);
     return LayoutBuilder(builder: (context, c) {
-      const pad = 16.0, gap = 14.0, target = 178.0;
+      final pad = compact ? 12.0 : 16.0;
+      final gap = compact ? 10.0 : 14.0;
+      final target = compact ? 92.0 : 178.0;
       final cols = ((c.maxWidth - pad * 2 + gap) / (target + gap))
           .floor()
-          .clamp(2, 12);
+          .clamp(2, 24);
       final itemW = (c.maxWidth - pad * 2 - gap * (cols - 1)) / cols;
+      final tp = tilePad(compact);
       // square logo area + fixed text block -> every tile identical
-      final itemH = (itemW - 24) + textBlock + 24;
+      final itemH = (itemW - tp * 2) + textBlock(compact) + tp * 2;
       return GridView.builder(
-        padding: const EdgeInsets.fromLTRB(pad, 6, pad, pad),
+        padding: EdgeInsets.fromLTRB(pad, 6, pad, pad),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: cols,
           mainAxisSpacing: gap,
@@ -60,7 +71,8 @@ class StationGrid extends StatelessWidget {
         ),
         itemCount: stations.length,
         itemBuilder: (context, i) =>
-            StationTile(station: stations[i], queue: stations),
+            StationTile(
+                station: stations[i], queue: stations, compact: compact),
       );
     });
   }
@@ -69,13 +81,18 @@ class StationGrid extends StatelessWidget {
 class StationTile extends StatelessWidget {
   final Station station;
   final List<Station> queue;
+  final bool compact;
   const StationTile(
-      {super.key, required this.station, this.queue = const []});
+      {super.key,
+      required this.station,
+      this.queue = const [],
+      this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tp = StationGrid.tilePad(compact);
     return ListenableBuilder(
       listenable: Listenable.merge([player, repo]),
       builder: (context, _) {
@@ -90,14 +107,14 @@ class StationTile extends StatelessWidget {
           color: isCurrent
               ? scheme.primaryContainer
               : scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(compact ? 12 : 20),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => player.play(station, queue: queue),
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(tp),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -107,58 +124,88 @@ class StationTile extends StatelessWidget {
                           builder: (context, c) => StationLogo(
                               station: station,
                               size: c.maxWidth,
-                              radius: 14),
+                              radius: compact ? 8 : 14),
                         ),
                       ),
                       SizedBox(
-                        height: StationGrid.textBlock,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 38,
-                              child: Text(
-                                station.name,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.2,
-                                  color: status == StreamStatus.dead
-                                      ? scheme.outline
-                                      : null,
+                        height: StationGrid.textBlock(compact),
+                        child: compact
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 5),
+                                child: Text(
+                                  station.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 10.5,
+                                    height: 1.15,
+                                    color: status == StreamStatus.dead
+                                        ? scheme.outline
+                                        : null,
+                                  ),
                                 ),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    height: 38,
+                                    child: Text(
+                                      station.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.2,
+                                        color: status == StreamStatus.dead
+                                            ? scheme.outline
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Padding(
+                                    // keep room for the VPN label
+                                    padding: EdgeInsets.only(
+                                        right: status == StreamStatus.vpn
+                                            ? 36
+                                            : 0),
+                                    child: Text(
+                                      sub.isEmpty ? ' ' : sub,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                              color: scheme.onSurfaceVariant),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Padding(
-                              // keep room for the VPN label
-                              padding: EdgeInsets.only(
-                                  right: status == StreamStatus.vpn ? 36 : 0),
-                              child: Text(
-                                sub.isEmpty ? ' ' : sub,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.labelSmall
-                                    ?.copyWith(color: scheme.onSurfaceVariant),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ],
                   ),
                 ),
                 if (status == StreamStatus.vpn)
-                  const Positioned(right: 10, bottom: 10, child: VpnBadge()),
+                  compact
+                      ? Positioned(
+                          left: tp + 3,
+                          bottom: StationGrid.textBlock(true) + tp + 3,
+                          child: const VpnBadge())
+                      : const Positioned(
+                          right: 10, bottom: 10, child: VpnBadge()),
                 Positioned(
-                  right: 14,
-                  top: 14,
+                  right: compact ? tp + 1 : 14,
+                  top: compact ? tp + 1 : 14,
                   child: IconButton(
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black.withValues(alpha: .35),
-                      minimumSize: const Size(30, 30),
+                      minimumSize: compact ? const Size(22, 22) : const Size(30, 30),
+                      tapTargetSize: compact
+                          ? MaterialTapTargetSize.shrinkWrap
+                          : MaterialTapTargetSize.padded,
                       padding: EdgeInsets.zero,
                     ),
                     visualDensity: VisualDensity.compact,
@@ -166,17 +213,17 @@ class StationTile extends StatelessWidget {
                     icon: Icon(
                       fav ? Icons.star_rounded : Icons.star_outline_rounded,
                       color: fav ? Colors.amber : Colors.white,
-                      size: 18,
+                      size: compact ? 13 : 18,
                     ),
                     onPressed: () => repo.toggleFavorite(station),
                   ),
                 ),
                 if (isCurrent)
                   Positioned(
-                    left: 18,
-                    top: 18,
+                    left: compact ? tp + 3 : 18,
+                    top: compact ? tp + 3 : 18,
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: EdgeInsets.all(compact ? 3 : 4),
                       decoration: BoxDecoration(
                         color: scheme.primary,
                         shape: BoxShape.circle,
@@ -185,7 +232,7 @@ class StationTile extends StatelessWidget {
                         player.active
                             ? Icons.graphic_eq_rounded
                             : Icons.pause_rounded,
-                        size: 14,
+                        size: compact ? 10 : 14,
                         color: scheme.onPrimary,
                       ),
                     ),

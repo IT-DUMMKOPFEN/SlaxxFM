@@ -91,6 +91,11 @@ const Map<String, Map<String, String>> _strings = {
     'details': 'Details',
     'speech': 'Speech',
     'visualizer': 'Visualizer',
+    'playback': 'Playback',
+    'buffer': 'Buffer',
+    'bufferSub':
+        'Playback starts a few seconds behind the live stream, so short dropouts are bridged unnoticed. Takes effect with the next station start.',
+    'bufferOff': 'Off',
     'visualizerSub':
         'Click / tap the visualizer to switch to the next effect. Effects that are switched off are skipped.',
     'fx_bars': 'Equalizer',
@@ -116,7 +121,7 @@ const Map<String, Map<String, String>> _strings = {
     'fx_leds': 'LED spectrum',
     'fx_orbits': 'Planets',
     'dancers': 'Dancers',
-    'dancersSub': 'A crowd on the dance floor (3 rows, couples, spins, ballet) while music is playing',
+    'dancersSub': 'A crowd on the dance floor (3 rows) with natural moves from real dancers while music is playing',
     'realAnalysis': 'Real audio analysis',
     'realAnalysisSub':
         'Measures the real spectrum and BPM. Android asks for the microphone permission for this – nothing is recorded.',
@@ -223,6 +228,11 @@ const Map<String, Map<String, String>> _strings = {
     'details': 'Details',
     'speech': 'Sprache',
     'visualizer': 'Visualisierung',
+    'playback': 'Wiedergabe',
+    'buffer': 'Puffer',
+    'bufferSub':
+        'Die Wiedergabe läuft ein paar Sekunden hinter dem Live-Stream, so werden kurze Aussetzer unbemerkt überbrückt. Gilt ab dem nächsten Senderstart.',
+    'bufferOff': 'Aus',
     'visualizerSub':
         'Ein Klick / Tipp auf die Visualisierung schaltet zum nächsten Effekt. Ausgeschaltete Effekte werden übersprungen.',
     'fx_bars': 'Equalizer',
@@ -248,7 +258,7 @@ const Map<String, Map<String, String>> _strings = {
     'fx_leds': 'LED-Spektrum',
     'fx_orbits': 'Planeten',
     'dancers': 'Tanzende Leute',
-    'dancersSub': 'Eine Menge auf der Tanzfläche (3 Reihen, Paare, Drehungen, Ballett), wenn Musik läuft',
+    'dancersSub': 'Eine Menge auf der Tanzfläche (3 Reihen) mit natürlichen Bewegungen echter Tänzer, wenn Musik läuft',
     'realAnalysis': 'Echte Audio-Analyse',
     'realAnalysisSub':
         'Misst das echte Spektrum und die BPM. Android fragt dafür nach der Mikrofon-Berechtigung – es wird nichts aufgenommen.',

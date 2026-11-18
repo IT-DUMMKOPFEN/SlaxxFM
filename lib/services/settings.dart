@@ -50,6 +50,10 @@ class AppSettings extends ChangeNotifier {
 
   bool muted = false;
 
+  /// Seconds of audio that are buffered before playback starts
+  /// (0 = off). Covers short dropouts of the stream.
+  int bufferSecs = 3;
+
   /// Visualizer effects that are switched on (ids, see visualizer.dart).
   Set<String> effects = {};
   String currentEffect = '';
@@ -73,6 +77,7 @@ class AppSettings extends ChangeNotifier {
     parallelChecks = _p.getInt('parallelChecks') ?? 16;
     recent = _p.getStringList('recent') ?? [];
     muted = _p.getBool('muted') ?? false;
+    bufferSecs = _p.getInt('bufferSecs') ?? 3;
     final eff = _p.getStringList('effects');
     effects = eff == null ? kAllEffects.toSet() : eff.toSet();
     // effects added in a newer version start switched on
@@ -141,6 +146,12 @@ class AppSettings extends ChangeNotifier {
   void saveVolume(double v) {
     volume = v;
     _p.setDouble('volume', v);
+  }
+
+  void setBufferSecs(int v) {
+    bufferSecs = v;
+    _p.setInt('bufferSecs', v);
+    notifyListeners();
   }
 
   void setMuted(bool v) {

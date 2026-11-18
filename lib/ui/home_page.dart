@@ -437,7 +437,7 @@ class _HomePageState extends State<HomePage> {
                       Expanded(child: _stationArea(showSearch: width >= 900)),
                       // visualizer strip in the free space above the bar
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                         child: SizedBox(
                           height: (MediaQuery.sizeOf(context).height * .22)
                               .clamp(110.0, 220.0),

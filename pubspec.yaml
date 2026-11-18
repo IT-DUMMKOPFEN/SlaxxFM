@@ -31,6 +31,7 @@ flutter:
   assets:
     - assets/curated_stations.json
     - assets/logo.png
+    - assets/dance/dancers.bin
 
 flutter_launcher_icons:
   android: true

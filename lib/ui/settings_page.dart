@@ -148,6 +148,25 @@ class SettingsPage extends StatelessWidget {
                     subtitle: Text(
                         '${repo.visibleCount} / ${repo.totalCount} ${tr('stations')}'),
                   ),
+                  header(tr('playback')),
+                  ListTile(
+                    leading: const Icon(Icons.hourglass_bottom_rounded),
+                    title: Text(tr('buffer')),
+                    subtitle: Text(tr('bufferSub')),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: SegmentedButton<int>(
+                      segments: [
+                        ButtonSegment(value: 0, label: Text(tr('bufferOff'))),
+                        const ButtonSegment(value: 3, label: Text('3 s')),
+                        const ButtonSegment(value: 5, label: Text('5 s')),
+                      ],
+                      selected: {settings.bufferSecs},
+                      onSelectionChanged: (v) =>
+                          settings.setBufferSecs(v.first),
+                    ),
+                  ),
                   header(tr('visualizer')),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
