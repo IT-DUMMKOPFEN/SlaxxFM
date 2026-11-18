@@ -92,6 +92,8 @@ const Map<String, Map<String, String>> _strings = {
     'speech': 'Speech',
     'visualizer': 'Visualizer',
     'playback': 'Playback',
+    'visualizerOn': 'Show effects',
+    'visualizerOnSub': 'Switches all effects and the dancers on or off',
     'buffer': 'Buffer',
     'bufferSub':
         'Playback starts a few seconds behind the live stream, so short dropouts are bridged unnoticed. Takes effect with the next station start.',
@@ -229,6 +231,8 @@ const Map<String, Map<String, String>> _strings = {
     'speech': 'Sprache',
     'visualizer': 'Visualisierung',
     'playback': 'Wiedergabe',
+    'visualizerOn': 'Effekte anzeigen',
+    'visualizerOnSub': 'Schaltet alle Effekte und die Tänzer ein oder aus',
     'buffer': 'Puffer',
     'bufferSub':
         'Die Wiedergabe läuft ein paar Sekunden hinter dem Live-Stream, so werden kurze Aussetzer unbemerkt überbrückt. Gilt ab dem nächsten Senderstart.',

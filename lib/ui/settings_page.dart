@@ -173,9 +173,17 @@ class SettingsPage extends StatelessWidget {
                     child: Text(tr('visualizerSub'),
                         style: theme.textTheme.bodySmall),
                   ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.auto_awesome_rounded),
+                    title: Text(tr('visualizerOn')),
+                    subtitle: Text(tr('visualizerOnSub')),
+                    value: settings.visualizerOn,
+                    onChanged: settings.setVisualizerOn,
+                  ),
                   for (final id in kAllEffects)
                     CheckboxListTile(
                       dense: true,
+                      enabled: settings.visualizerOn,
                       title: Text(effectName(id)),
                       value: settings.effects.contains(id),
                       onChanged: (v) =>
@@ -185,8 +193,9 @@ class SettingsPage extends StatelessWidget {
                     secondary: const Icon(Icons.accessibility_new_rounded),
                     title: Text(tr('dancers')),
                     subtitle: Text(tr('dancersSub')),
-                    value: settings.dancers,
-                    onChanged: settings.setDancers,
+                    value: settings.visualizerOn && settings.dancers,
+                    onChanged:
+                        settings.visualizerOn ? settings.setDancers : null,
                   ),
                   if (Platform.isAndroid)
                     SwitchListTile(

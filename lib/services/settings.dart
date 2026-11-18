@@ -59,6 +59,9 @@ class AppSettings extends ChangeNotifier {
   String currentEffect = '';
   bool dancers = true;
 
+  /// Master switch for the whole visualizer (effects and dancers).
+  bool visualizerOn = true;
+
   /// Android: real spectrum via android.media.audiofx.Visualizer
   /// (needs the microphone permission).
   bool realAnalysis = false;
@@ -90,6 +93,7 @@ class AppSettings extends ChangeNotifier {
     _p.setStringList('effects', effects.toList());
     currentEffect = _p.getString('currentEffect') ?? kAllEffects.first;
     dancers = _p.getBool('dancers') ?? true;
+    visualizerOn = _p.getBool('visualizerOn') ?? true;
     realAnalysis = _p.getBool('realAnalysis') ?? false;
   }
 
@@ -186,6 +190,12 @@ class AppSettings extends ChangeNotifier {
     if (list.isEmpty) return;
     final i = list.indexOf(currentEffect);
     setCurrentEffect(list[(i + 1) % list.length]);
+  }
+
+  void setVisualizerOn(bool v) {
+    visualizerOn = v;
+    _p.setBool('visualizerOn', v);
+    notifyListeners();
   }
 
   void setDancers(bool v) {

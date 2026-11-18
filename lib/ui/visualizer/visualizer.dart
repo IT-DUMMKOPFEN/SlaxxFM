@@ -39,6 +39,7 @@ class _VisualizerState extends State<Visualizer>
   }
 
   void _onTick(Duration _) {
+    if (!settings.visualizerOn) return;
     analyzer.tick();
     // idle (nothing playing, everything faded): ~15 fps is enough
     if (!player.active && analyzer.level < .01) {
@@ -69,6 +70,8 @@ class _VisualizerState extends State<Visualizer>
     return ListenableBuilder(
       listenable: settings,
       builder: (context, _) {
+        // master switch off -> no effects and no dancers
+        if (!settings.visualizerOn) return const SizedBox.shrink();
         final enabled = settings.enabledEffects;
         final showDancers = settings.dancers;
         if (enabled.isEmpty && !showDancers) return const SizedBox.shrink();

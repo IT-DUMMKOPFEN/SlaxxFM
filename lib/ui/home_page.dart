@@ -436,6 +436,7 @@ class _HomePageState extends State<HomePage> {
                     child: Column(children: [
                       Expanded(child: _stationArea(showSearch: width >= 900)),
                       // visualizer strip in the free space above the bar
+                      if (settings.visualizerOn)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
                         child: SizedBox(

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../l10n.dart';
 import '../../models/station.dart';
 import '../../services/player_service.dart';
+import '../../services/settings.dart';
 import '../../services/station_repository.dart';
 import '../visualizer/visualizer.dart';
 import 'country_list.dart';
@@ -267,7 +268,7 @@ class PlayerPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([player, repo]),
+      listenable: Listenable.merge([player, repo, settings]),
       builder: (context, _) {
         final s = player.current;
         final theme = Theme.of(context);
@@ -335,8 +336,11 @@ class PlayerPanel extends StatelessWidget {
                     child: _Details(station: s, status: status),
                   ),
                 ),
-              const SizedBox(height: 12),
-              const Expanded(flex: 2, child: Visualizer()),
+              if (settings.visualizerOn) ...[
+                const SizedBox(height: 12),
+                const Expanded(flex: 2, child: Visualizer()),
+              ] else
+                const Spacer(),
             ],
           ),
         );
