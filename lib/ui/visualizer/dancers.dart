@@ -10,7 +10,7 @@ import '../../services/audio_analyzer.dart';
 //  Dance floor with natural moving people.
 //
 //  The motion comes from real dancers: assets/dance/dancers.bin holds
-//  the outlines of 7 people from free green-screen dance videos
+//  the outlines of 6 people from free green-screen dance videos
 //  (tool/extract_dancers.py): 15 outlines per second, 96 points each,
 //  aligned frame to frame so that the app can morph smoothly between
 //  them. Every dancer on the floor plays one of these clips (mirrored or

@@ -27,10 +27,9 @@ clips = [
     ('3782929d-FREE_HD_Green_Screen_DANCING_GIRLS_Silhouette_01.mp4', 1, 4, 24),
     ('7b7f17d5-FREE_HD_Green_Screen_DANCING_GIRLS_Silhouette_02.mp4', 1, 4, 61),
     ('4a8d879a-Girl_Dancing_in_black_dress_green_screen_green_screen_girl_download_dance_greenscreen_lady_girl.mp4', 1, 0, 30),
-    ('abe2ea53-Woman_Dancing_Hip_Hop_Green_Screen_-__Chroma_Key_-_No_Copyright.mp4', 1, 0, 16.5),
 ]
-# per clip key (min saturation, min value); hair with green spill needs more
-KEY = {'abe2ea53': (75, 50)}
+# per clip key (min saturation, min value), e.g. for hair with green spill
+KEY = {}
 
 def soft_fg(frame, up, key=(55, 18)):
     if up != 1:
