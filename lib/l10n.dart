@@ -138,7 +138,7 @@ const Map<String, Map<String, String>> _strings = {
     'fx_bars3d': '3D equalizer',
     'fx_snow': 'Snowfall',
     'dancers': 'Dancers',
-    'dancersSub': 'A crowd on the dance floor (3 rows) with natural moves from real dancers while music is playing',
+    'dancersSub': 'A crowd on the dance floor (3 rows) with 32 dance animations while music is playing',
     'realAnalysis': 'Real audio analysis',
     'realAnalysisSub':
         'Measures the real spectrum and BPM. Android asks for the microphone permission for this – nothing is recorded.',
@@ -292,7 +292,7 @@ const Map<String, Map<String, String>> _strings = {
     'fx_bars3d': '3D-Equalizer',
     'fx_snow': 'Schneefall',
     'dancers': 'Tanzende Leute',
-    'dancersSub': 'Eine Menge auf der Tanzfläche (3 Reihen) mit natürlichen Bewegungen echter Tänzer, wenn Musik läuft',
+    'dancersSub': 'Eine Menge auf der Tanzfläche (3 Reihen) mit 32 Tanz-Animationen, wenn Musik läuft',
     'realAnalysis': 'Echte Audio-Analyse',
     'realAnalysisSub':
         'Misst das echte Spektrum und die BPM. Android fragt dafür nach der Mikrofon-Berechtigung – es wird nichts aufgenommen.',

@@ -1,7 +1,7 @@
 name: slaxxfm
 description: "SlaxxFM – a slim player for free internet music radio stations, sorted by country."
 publish_to: 'none'
-version: 1.3.0+4
+version: 1.3.1+5
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -31,7 +31,7 @@ flutter:
   assets:
     - assets/curated_stations.json
     - assets/logo.png
-    - assets/dance/dancers.bin
+    - assets/dance/silhouettes.bin
 
 flutter_launcher_icons:
   android: true

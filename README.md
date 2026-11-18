@@ -16,7 +16,7 @@ Für Windows, Linux, macOS (Intel + Apple Silicon) und Android.
 - **VPN-Label** unten rechts: Streams, die mit HTTP 401/403/451 antworten (regional gesperrt), bzw. beim Abspielen „403 Forbidden“ melden.
 - **Player-Leiste** unten: Stopp, Zurück, Abspielen/Pause, Weiter, Favorit; rechts Lautstärkeregler und Stumm-Knopf.
 - **Visualisierung** mit 9 Effekten (Equalizer, Regenbogen, rund, Sternenflug, Sound Wave, Farbwellen, Diskolicht, Diskokugel, Feuerwerk) – Klick wechselt, jeder Effekt einzeln abschaltbar.
-- **Tanzfläche**: eine Menge schwarzer Silhouetten in drei Reihen mit natürlichen Bewegungen echter Tänzer (Umrisse aus freien Green-Screen-Videos, `tool/extract_dancers.py`), Tempo passend zu den BPM; abschaltbar.
+- **Tanzfläche**: eine Menge schwarzer Silhouetten in drei Reihen – 32 Tanz-Animationen, deren Umrisse 1:1 aus zwei Silhouetten-Videos ausgeschnitten wurden (30 fps, unverändert, `tool/cut_green_raw.py` + `tool/pack_silhouettes.py`), Tempo passend zu den BPM; abschaltbar.
 - **Puffer** 0 / 3 / 5 Sekunden (Standard 3 s) gegen kurze Stream-Aussetzer.
 - **Favoriten exportieren/importieren** (SlaxxFM-JSON oder M3U-Playlist).
 - **Hilfe** auf Deutsch und Englisch in der App.

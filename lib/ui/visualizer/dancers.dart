@@ -1,3 +1,4 @@
+import 'dart:io' show ZLibCodec;
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -7,28 +8,22 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../../services/audio_analyzer.dart';
 
 // =====================================================================
-//  Dance floor with natural moving people.
+//  Dance floor with black silhouettes.
 //
-//  The motion comes from real dancers: assets/dance/dancers.bin holds
-//  the outlines of 6 people from free green-screen dance videos
-//  (tool/extract_dancers.py): 15 outlines per second, 96 points each,
-//  aligned frame to frame so that the app can morph smoothly between
-//  them. Every dancer on the floor plays one of these clips (mirrored or
-//  not, own start point and size), at a speed matched to the BPM.
-//
-//  All people are filled pure black, in three staggered rows, with a
-//  coloured club light behind them.
+//  assets/dance/silhouettes.bin holds 32 dancers cut out of two
+//  green-screen silhouette videos (tool/cut_green_raw.py +
+//  tool/pack_silhouettes.py): the exact outline of every video frame at
+//  30 fps - no smoothing, no morphing. The app simply plays these frames
+//  (speed matched to the BPM), mirrored or not, in three staggered rows,
+//  all filled pure black in front of a coloured club light.
 // =====================================================================
 
 class DanceClip {
-  final int frames;
-  final int points;
-  final double fps;
-  final double bpm;
+  final double fps, bpm, cx, ground, height;
 
-  /// frames * points * 2 (x, y), body height = 1, floor at y = 0.
-  final Float32List data;
-  DanceClip(this.frames, this.points, this.fps, this.bpm, this.data);
+  /// frames -> polygons -> x,y pairs (pixels)
+  final List<List<Int16List>> frames;
+  DanceClip(this.fps, this.bpm, this.cx, this.ground, this.height, this.frames);
 }
 
 class DanceLibrary {
@@ -38,37 +33,58 @@ class DanceLibrary {
   static void ensureLoaded() {
     if (clips != null || _loading) return;
     _loading = true;
-    rootBundle.load('assets/dance/dancers.bin').then((bd) {
-      clips = _parse(bd);
+    rootBundle.load('assets/dance/silhouettes.bin').then((bd) {
+      final raw = ZLibCodec().decode(bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes));
+      clips = _parse(ByteData.sublistView(Uint8List.fromList(raw)));
     }).catchError((_) {
       clips = const [];
     });
   }
 
-  static List<DanceClip> _parse(ByteData bd) {
+  static List<DanceClip> _parse(ByteData b) {
     const le = Endian.little;
-    if (bd.lengthInBytes < 8 ||
+    if (b.lengthInBytes < 8 ||
         String.fromCharCodes(
-                [bd.getUint8(0), bd.getUint8(1), bd.getUint8(2), bd.getUint8(3)]) !=
-            'SLXD') {
+                [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)]) !=
+            'SLXR') {
       return const [];
     }
-    final n = bd.getUint16(6, le);
+    final n = b.getUint16(6, le);
     var o = 8;
     final out = <DanceClip>[];
-    for (var s = 0; s < n; s++) {
-      final frames = bd.getUint16(o, le);
-      final points = bd.getUint16(o + 2, le);
-      final fps = bd.getFloat32(o + 4, le);
-      final bpm = bd.getFloat32(o + 8, le);
-      o += 12;
-      final count = frames * points * 2;
-      final data = Float32List(count);
-      for (var i = 0; i < count; i++) {
-        data[i] = bd.getInt16(o, le) / 8000.0;
-        o += 2;
+    for (var c = 0; c < n; c++) {
+      final frameCount = b.getUint16(o, le);
+      final fps = b.getFloat32(o + 2, le);
+      final bpm = b.getFloat32(o + 6, le);
+      final cx = b.getFloat32(o + 10, le);
+      final ground = b.getFloat32(o + 14, le);
+      final height = b.getFloat32(o + 18, le);
+      o += 22;
+      final frames = <List<Int16List>>[];
+      for (var f = 0; f < frameCount; f++) {
+        final polys = b.getUint8(o);
+        o += 1;
+        final list = <Int16List>[];
+        for (var p = 0; p < polys; p++) {
+          final pts = b.getUint16(o, le);
+          var x = b.getInt16(o + 2, le);
+          var y = b.getInt16(o + 4, le);
+          o += 6;
+          final xy = Int16List(pts * 2);
+          xy[0] = x;
+          xy[1] = y;
+          for (var i = 1; i < pts; i++) {
+            x += b.getInt8(o);
+            y += b.getInt8(o + 1);
+            o += 2;
+            xy[i * 2] = x;
+            xy[i * 2 + 1] = y;
+          }
+          list.add(xy);
+        }
+        frames.add(list);
       }
-      out.add(DanceClip(frames, points, fps, bpm, data));
+      out.add(DanceClip(fps, bpm, cx, ground, height, frames));
     }
     return out;
   }
@@ -80,10 +96,8 @@ class _Slot {
   final int clip;
   final double seed;
   final bool mirror;
-  final double width;
   double pos; // current frame position
-  _Slot(this.row, this.x, this.clip, this.seed, this.mirror, this.width,
-      this.pos);
+  _Slot(this.row, this.x, this.clip, this.seed, this.mirror, this.pos);
 }
 
 class Dancers {
@@ -99,13 +113,16 @@ class Dancers {
     _forHeight = size.height;
     final r = math.Random(42);
     final slots = <_Slot>[];
+    // shuffled clip order, so neighbours are different dancers
+    final order = List<int>.generate(clips.length, (i) => i)..shuffle(r);
+    var next = 0;
     for (var row = 0; row < 3; row++) {
       final h = hFront * _rowScale[row];
       final n = math.max(3, (size.width / (h * _rowSpacing[row])).round());
       final step = size.width / n;
       final offset = row.isOdd ? step * .5 : step * .15;
       for (var i = 0; i < n; i++) {
-        final clip = r.nextInt(clips.length);
+        final clip = order[next++ % order.length];
         final seed = r.nextDouble();
         slots.add(_Slot(
           row,
@@ -113,8 +130,7 @@ class Dancers {
           clip,
           seed,
           r.nextBool(),
-          .92 + r.nextDouble() * .16,
-          seed * clips[clip].frames,
+          seed * clips[clip].frames.length,
         ));
       }
     }
@@ -160,35 +176,29 @@ class Dancers {
     final path = Path();
     for (final slot in _slots) {
       final clip = clips[slot.clip];
-      // play at a speed that matches the music
       var clipBpm = clip.bpm;
       while (clipBpm > 145) {
         clipBpm /= 2;
       }
       final rate = (a.bpm / clipBpm).clamp(.8, 1.25);
-      slot.pos = (slot.pos + a.dt * clip.fps * rate) % clip.frames;
+      final count = clip.frames.length;
+      slot.pos = (slot.pos + a.dt * clip.fps * rate) % count;
 
       final h = hFront * _rowScale[slot.row];
       final ground = rowGround[slot.row];
-      final x0 = slot.x * size.width +
-          math.sin(a.time * .25 + slot.seed * 9) * h * .1;
-      final i0 = slot.pos.floor();
-      final i1 = i0 + 1;
-      // no morph across the loop point
-      final f = i1 >= clip.frames ? 0.0 : slot.pos - i0;
-      final b0 = i0 * clip.points * 2;
-      final b1 = (i1 % clip.frames) * clip.points * 2;
-      final sx = (slot.mirror ? -1.0 : 1.0) * h * slot.width;
-      final pts = List<Offset>.filled(clip.points, Offset.zero);
-      for (var k = 0; k < clip.points; k++) {
-        final j0 = b0 + k * 2, j1 = b1 + k * 2;
-        final px = clip.data[j0] + (clip.data[j1] - clip.data[j0]) * f;
-        final py = clip.data[j0 + 1] + (clip.data[j1 + 1] - clip.data[j0 + 1]) * f;
-        pts[k] = Offset(x0 + px * sx, ground + py * h);
+      final x0 = slot.x * size.width;
+      final sx = (slot.mirror ? -1.0 : 1.0) * h / clip.height;
+      final sy = h / clip.height;
+      for (final poly in clip.frames[slot.pos.floor() % count]) {
+        final n = poly.length ~/ 2;
+        final pts = List<Offset>.generate(
+            n,
+            (i) => Offset(x0 + (poly[i * 2] - clip.cx) * sx,
+                ground + (poly[i * 2 + 1] - clip.ground) * sy));
+        // mirrored outlines run the other way round: keep one winding so
+        // that overlapping people unite without holes
+        path.addPolygon(slot.mirror ? pts.reversed.toList() : pts, true);
       }
-      // mirrored outlines run the other way round: keep one winding so
-      // that the non-zero fill unites overlapping people without holes
-      path.addPolygon(slot.mirror ? pts.reversed.toList() : pts, true);
     }
     c.drawPath(path, Paint()..color = Colors.black.withValues(alpha: alpha));
   }
