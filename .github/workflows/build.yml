@@ -2,6 +2,11 @@ name: Build SlaxxFM
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release-Tag (z.B. v1.3.1), leer = kein Release'
+        required: false
+        default: ''
   push:
     tags: ['v*']
 
@@ -109,7 +114,7 @@ jobs:
 
   release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -119,3 +124,6 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
+          name: SlaxxFM ${{ inputs.release_tag || github.ref_name }}
