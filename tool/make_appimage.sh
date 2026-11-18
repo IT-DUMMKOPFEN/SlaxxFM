@@ -60,7 +60,7 @@ done
 ./linuxdeploy --appdir "$APPDIR" --library "$LIBMPV" "${EXCLUDES[@]}"
 # media_kit looks for "libmpv.so" first
 ( cd "$APPDIR/usr/lib" && ln -sf "$(basename "$LIBMPV")" libmpv.so )
-ls -la "$APPDIR/usr/lib" | head -40
+echo "bundled libraries: $(ls "$APPDIR/usr/lib" | wc -l)"
 
 ARCH=x86_64 ./appimagetool --no-appstream "$APPDIR" "SlaxxFM-linux-x86_64.AppImage"
 ls -la SlaxxFM-linux-x86_64.AppImage
