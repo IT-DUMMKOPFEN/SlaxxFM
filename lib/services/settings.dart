@@ -29,6 +29,18 @@ const List<String> kAllEffects = [
   'spiral',
   'leds',
   'orbits',
+  'scope',
+  'circlewave',
+  'confetti',
+  'lava',
+  'sunburst',
+  'hexgrid',
+  'flower',
+  'helix',
+  'fire',
+  'fountain',
+  'bars3d',
+  'snow',
 ];
 
 class AppSettings extends ChangeNotifier {
@@ -49,6 +61,9 @@ class AppSettings extends ChangeNotifier {
   List<String> recent = [];
 
   bool muted = false;
+
+  /// Android: the battery-optimisation question was shown once.
+  bool askedBattery = false;
 
   /// Seconds of audio that are buffered before playback starts
   /// (0 = off). Covers short dropouts of the stream.
@@ -80,6 +95,7 @@ class AppSettings extends ChangeNotifier {
     parallelChecks = _p.getInt('parallelChecks') ?? 16;
     recent = _p.getStringList('recent') ?? [];
     muted = _p.getBool('muted') ?? false;
+    askedBattery = _p.getBool('askedBattery') ?? false;
     bufferSecs = _p.getInt('bufferSecs') ?? 3;
     final eff = _p.getStringList('effects');
     effects = eff == null ? kAllEffects.toSet() : eff.toSet();
@@ -156,6 +172,11 @@ class AppSettings extends ChangeNotifier {
     bufferSecs = v;
     _p.setInt('bufferSecs', v);
     notifyListeners();
+  }
+
+  void setAskedBattery() {
+    askedBattery = true;
+    _p.setBool('askedBattery', true);
   }
 
   void setMuted(bool v) {

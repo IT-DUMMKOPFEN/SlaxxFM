@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../l10n.dart';
 import '../services/favorites_io.dart';
+import '../services/player_service.dart';
 import '../services/settings.dart';
 import '../services/station_repository.dart';
 import 'help_page.dart';
 import 'visualizer/visualizer.dart' show effectName;
 
-const String kAppVersion = '1.2.0';
+const String kAppVersion = '1.3.0';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -167,6 +168,13 @@ class SettingsPage extends StatelessWidget {
                           settings.setBufferSecs(v.first),
                     ),
                   ),
+                  if (Platform.isAndroid)
+                    ListTile(
+                      leading: const Icon(Icons.battery_saver_rounded),
+                      title: Text(tr('battery')),
+                      subtitle: Text(tr('batterySub')),
+                      onTap: player.requestBatteryExemption,
+                    ),
                   header(tr('visualizer')),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),

@@ -57,8 +57,9 @@ Workflow `.github/workflows/build.yml`: unter *Actions → Build SlaxxFM → Run
 (dann wird automatisch ein Release mit allen Dateien erstellt):
 
 - `SlaxxFM-windows-x64.zip`
+- `SlaxxFM-linux-x86_64.AppImage` (läuft ohne Installation, libmpv ist enthalten)
 - `SlaxxFM-linux-x64.tar.gz`
-- `SlaxxFM-macos-universal.zip`
+- `SlaxxFM-macos-universal.zip`, `SlaxxFM-macos-intel.zip`, `SlaxxFM-macos-apple-silicon.zip`
 - `SlaxxFM-android-universal.apk` + Split-APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`)
 
 ### Lokal

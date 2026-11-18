@@ -75,6 +75,15 @@ class AudioAnalyzer {
   Timer? _androidRetry;
   bool _started = false;
 
+  /// False while the app is in the background: nothing is drawn then,
+  /// so no measuring either (saves CPU for the audio).
+  bool _visible = true;
+  set appVisible(bool v) {
+    if (_visible == v) return;
+    _visible = v;
+    _updateSources();
+  }
+
   static const _androidChannel = EventChannel('slaxxfm/visualizer');
 
   void start() {
@@ -89,7 +98,7 @@ class AudioAnalyzer {
 
   void _updateSources() {
     // Linux: poll mpv loudness while playing
-    if (Platform.isLinux && player.active) {
+    if (Platform.isLinux && player.active && _visible) {
       _mpvTimer ??=
           Timer.periodic(const Duration(milliseconds: 40), (_) => _pollMpv());
     } else {
@@ -98,7 +107,7 @@ class AudioAnalyzer {
     }
     // Android: Visualizer (opt-in)
     final wantAndroid =
-        Platform.isAndroid && settings.realAnalysis && player.active;
+        Platform.isAndroid && settings.realAnalysis && player.active && _visible;
     if (wantAndroid && _androidSub == null) {
       _listenAndroid();
     } else if (!wantAndroid && _androidSub != null) {

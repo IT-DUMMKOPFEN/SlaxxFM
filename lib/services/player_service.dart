@@ -101,6 +101,14 @@ class PlayerService extends ChangeNotifier {
       await native.setProperty('network-timeout', '20');
       await native.setProperty('stream-lavf-o',
           'reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=30');
+      // radio only: never decode video tracks / cover art
+      await native.setProperty('vid', 'no');
+      await native.setProperty('audio-display', 'no');
+      if (Platform.isAndroid) {
+        // bigger audio output buffer: survives CPU hiccups when the app
+        // runs in the background with the screen off
+        await native.setProperty('audio-buffer', '0.8');
+      }
       await native.setProperty('cache', 'yes');
       await native.setProperty('cache-secs', '60');
       await _applyBuffer();
@@ -199,6 +207,33 @@ class PlayerService extends ChangeNotifier {
     }
   }
 
+  /// Android: is SlaxxFM still restricted by the battery optimisation?
+  Future<bool> batteryOptimized() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await _locks.invokeMethod<bool>('batteryOptimized') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Opens the system dialog that exempts SlaxxFM from battery
+  /// optimisation (otherwise some phones throttle the stream in the
+  /// background).
+  Future<void> requestBatteryExemption() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _locks.invokeMethod('requestBatteryExemption');
+    } catch (_) {}
+  }
+
+  Future<void> _askBatteryExemptionOnce() async {
+    if (!Platform.isAndroid || settings.askedBattery) return;
+    if (!await batteryOptimized()) return;
+    settings.setAskedBattery();
+    await requestBatteryExemption();
+  }
+
   Future<void> _setLocks(bool on) async {
     if (!Platform.isAndroid) return;
     try {
@@ -215,12 +250,14 @@ class PlayerService extends ChangeNotifier {
     _attempts = 0;
     _stationEverPlayed = false;
     _wantPlaying = true;
+    unawaited(_askBatteryExemptionOnce());
     settings.addRecent(s.id);
     repo.api.countClick(s.id);
     await _open(s);
   }
 
   Future<void> _open(Station s) async {
+    _pausedAt = null;
     _reconnectTimer?.cancel();
     _stallTimer?.cancel();
     final changed = current?.id != s.id;
@@ -249,9 +286,28 @@ class PlayerService extends ChangeNotifier {
     Future.delayed(const Duration(milliseconds: 1500), _pollMetadata);
   }
 
-  /// For live radio "resume" means: reconnect to the live stream.
+  DateTime? _pausedAt;
+
+  /// Resume after a short pause (call, notification sound, headphones):
+  /// continue from the buffer. After a longer pause reconnect to the
+  /// live stream.
   Future<void> resume() async {
     final s = current;
+    final pausedAt = _pausedAt;
+    if (s != null &&
+        pausedAt != null &&
+        DateTime.now().difference(pausedAt).inSeconds < 45 &&
+        error == null) {
+      _pausedAt = null;
+      _wantPlaying = true;
+      try {
+        await _session?.setActive(true);
+      } catch (_) {}
+      unawaited(_setLocks(true));
+      await _player.play();
+      notifyListeners();
+      return;
+    }
     if (s == null) {
       // nothing chosen yet: start the most recent station
       for (final id in settings.recent) {
@@ -264,6 +320,7 @@ class PlayerService extends ChangeNotifier {
   }
 
   Future<void> pause() async {
+    _pausedAt = DateTime.now();
     _wantPlaying = false;
     _reconnectTimer?.cancel();
     _stallTimer?.cancel();

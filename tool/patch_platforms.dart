@@ -29,6 +29,7 @@ const _permissions = '''
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -62,11 +63,14 @@ package $pkg
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.audiofx.Visualizer
+import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.PowerManager
+import android.provider.Settings
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -80,6 +84,23 @@ class MainActivity : AudioServiceActivity() {
                 when (call.method) {
                     "acquire" -> { PlaybackLocks.acquire(applicationContext); result.success(null) }
                     "release" -> { PlaybackLocks.release(); result.success(null) }
+                    "batteryOptimized" -> {
+                        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                        result.success(Build.VERSION.SDK_INT >= 23 &&
+                            !pm.isIgnoringBatteryOptimizations(packageName))
+                    }
+                    "requestBatteryExemption" -> {
+                        try {
+                            if (Build.VERSION.SDK_INT >= 23) {
+                                startActivity(Intent(
+                                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                    Uri.parse("package:\$packageName")))
+                            }
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.success(false)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }

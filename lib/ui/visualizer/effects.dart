@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../services/audio_analyzer.dart';
 import '../brand.dart';
 import 'effects2.dart';
+import 'effects3.dart';
 
 /// One visualizer effect. Instances keep their own animation state.
 abstract class VisEffect {
@@ -34,6 +35,18 @@ VisEffect createEffect(String id) => switch (id) {
       'spiral' => SpiralEffect(),
       'leds' => LedEffect(),
       'orbits' => OrbitsEffect(),
+      'scope' => ScopeEffect(),
+      'circlewave' => CircleWaveEffect(),
+      'confetti' => ConfettiEffect(),
+      'lava' => LavaEffect(),
+      'sunburst' => SunburstEffect(),
+      'hexgrid' => HexGridEffect(),
+      'flower' => FlowerEffect(),
+      'helix' => HelixEffect(),
+      'fire' => FireEffect(),
+      'fountain' => FountainEffect(),
+      'bars3d' => Bars3dEffect(),
+      'snow' => SnowEffect(),
       _ => BarsEffect(),
     };
 

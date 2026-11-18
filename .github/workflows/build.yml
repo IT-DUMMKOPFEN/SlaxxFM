@@ -60,13 +60,32 @@ jobs:
           cp assets/icon/icon.png build/linux/x64/release/bundle/slaxxfm.png
           tar -czf SlaxxFM-linux-x64.tar.gz -C build/linux/x64/release bundle
 
-      # ---------------- macOS (universal: Intel + Apple Silicon)
+      - if: matrix.target == 'linux'
+        name: Linux AppImage
+        run: |
+          sudo apt-get install -y imagemagick file desktop-file-utils
+          rm -f build/linux/x64/release/bundle/slaxxfm.png
+          tool/make_appimage.sh "$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+
+      # ---------------- macOS: universal + Intel + Apple Silicon
       - if: matrix.target == 'macos'
         run: |
           flutter build macos --release
           cd build/macos/Build/Products/Release
           APP=$(ls -d *.app | head -n1)
+          BIN="$APP/Contents/MacOS/$(defaults read "$PWD/$APP/Contents/Info" CFBundleExecutable)"
+          echo "architectures: $(lipo -archs "$BIN")"
           ditto -c -k --sequesterRsrc --keepParent "$APP" "$GITHUB_WORKSPACE/SlaxxFM-macos-universal.zip"
+          # thin copies for one architecture each (ditto keeps one slice)
+          for ARCH in x86_64 arm64; do
+            NAME=$([ "$ARCH" = x86_64 ] && echo intel || echo apple-silicon)
+            rm -rf "thin/$ARCH"; mkdir -p "thin/$ARCH"
+            ditto --arch "$ARCH" "$APP" "thin/$ARCH/$APP"
+            codesign --force --deep --sign - "thin/$ARCH/$APP"
+            echo "$NAME: $(lipo -archs "thin/$ARCH/$BIN")"
+            (cd "thin/$ARCH" && ditto -c -k --sequesterRsrc --keepParent "$APP" \
+              "$GITHUB_WORKSPACE/SlaxxFM-macos-$NAME.zip")
+          done
 
       # ---------------- Android
       - if: matrix.target == 'android'
@@ -86,6 +105,7 @@ jobs:
             SlaxxFM-*.zip
             SlaxxFM-*.tar.gz
             SlaxxFM-*.apk
+            SlaxxFM-*.AppImage
 
   release:
     needs: build

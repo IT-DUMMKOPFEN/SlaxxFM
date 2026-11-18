@@ -22,8 +22,31 @@ Future<void> main() async {
   repo.init();
 }
 
-class SlaxxFmApp extends StatelessWidget {
+class SlaxxFmApp extends StatefulWidget {
   const SlaxxFmApp({super.key});
+
+  @override
+  State<SlaxxFmApp> createState() => _SlaxxFmAppState();
+}
+
+class _SlaxxFmAppState extends State<SlaxxFmApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    analyzer.appVisible = state == AppLifecycleState.resumed ||
+        state == AppLifecycleState.inactive;
+  }
 
   @override
   Widget build(BuildContext context) {
