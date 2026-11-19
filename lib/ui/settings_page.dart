@@ -10,7 +10,7 @@ import '../services/station_repository.dart';
 import 'help_page.dart';
 import 'visualizer/visualizer.dart' show effectName;
 
-const String kAppVersion = '1.3.1';
+const String kAppVersion = '1.3.2';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

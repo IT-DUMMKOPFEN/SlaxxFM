@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'services/audio_analyzer.dart';
@@ -30,14 +31,22 @@ class SlaxxFmApp extends StatefulWidget {
 }
 
 class _SlaxxFmAppState extends State<SlaxxFmApp> with WidgetsBindingObserver {
+  late final AppLifecycleListener _exitListener;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // desktop: shut mpv down before the engine goes away (crash on quit)
+    _exitListener = AppLifecycleListener(onExitRequested: () async {
+      await player.shutdown();
+      return AppExitResponse.exit;
+    });
   }
 
   @override
   void dispose() {
+    _exitListener.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

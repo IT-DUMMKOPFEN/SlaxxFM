@@ -213,15 +213,38 @@ class StationRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sorts by the chosen mode; ties are always broken by name (A–Z) so
+  /// every list is in a stable, predictable order.
   void _sort(List<Station> l) {
+    int byName(Station a, Station b) =>
+        _nameKey(a.name).compareTo(_nameKey(b.name));
     switch (settings.sort) {
       case SortMode.popular:
-        l.sort((a, b) => (b.votes + b.clicks).compareTo(a.votes + a.clicks));
+        l.sort((a, b) {
+          final c = (b.votes + b.clicks).compareTo(a.votes + a.clicks);
+          return c != 0 ? c : byName(a, b);
+        });
       case SortMode.name:
-        l.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        l.sort(byName);
       case SortMode.bitrate:
-        l.sort((a, b) => b.bitrate.compareTo(a.bitrate));
+        l.sort((a, b) {
+          final c = b.bitrate.compareTo(a.bitrate);
+          return c != 0 ? c : byName(a, b);
+        });
     }
+  }
+
+  /// Name key for sorting: case-insensitive, umlauts folded, leading
+  /// punctuation/spaces ignored.
+  static final Map<String, String> _keyCache = {};
+  static String _nameKey(String n) =>
+      _keyCache[n] ??= _makeNameKey(n);
+  static String _makeNameKey(String n) {
+    var s = n.toLowerCase().trim();
+    const m = {'ä': 'a', 'ö': 'o', 'ü': 'u', 'ß': 'ss', 'é': 'e', 'è': 'e',
+      'á': 'a', 'à': 'a', 'ó': 'o', 'ò': 'o', 'í': 'i', 'ú': 'u', 'ñ': 'n', 'ç': 'c'};
+    s = s.split('').map((c) => m[c] ?? c).join();
+    return s.replaceFirst(RegExp(r'^[^a-z0-9]+'), '');
   }
 
   List<Station> stationsOf(String code) {
@@ -240,9 +263,9 @@ class StationRepository extends ChangeNotifier {
     final res = base
         .where((s) =>
             s.name.toLowerCase().contains(q) || s.tags.contains(q))
-        .take(1000)
         .toList();
-    return res;
+    if (countryCode == null) _sort(res);
+    return res.length > 1000 ? res.sublist(0, 1000) : res;
   }
 
   Station? byId(String id) {

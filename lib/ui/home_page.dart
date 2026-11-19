@@ -342,7 +342,7 @@ class _HomePageState extends State<HomePage> {
     final searching = _query.trim().isNotEmpty;
     final List<Station> list;
     if (searching) {
-      list = repo.search(_query);
+      list = repo.search(_query, countryCode: _country);
     } else if (_country != null) {
       list = repo.stationsOf(_country!);
     } else {
@@ -352,14 +352,16 @@ class _HomePageState extends State<HomePage> {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
         child: Row(children: [
-          if (!searching && _country != null) ...[
+          if (_country != null) ...[
             CountryFlag(code: _country!, width: 32),
             const SizedBox(width: 10),
           ],
           Expanded(
             child: Text(
               searching
-                  ? tr('results', {'n': list.length})
+                  ? (_country == null
+                      ? tr('results', {'n': list.length})
+                      : '${countryLabelForCode(_country!)} · ${tr('results', {'n': list.length})}')
                   : _country == null
                       ? tr('chooseCountry')
                       : '${countryLabelForCode(_country!)} · ${list.length} ${tr('stations')}',

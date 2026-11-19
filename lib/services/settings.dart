@@ -52,7 +52,7 @@ class AppSettings extends ChangeNotifier {
   String language = 'system';
   bool musicOnly = true;
   bool hideVpn = false;
-  SortMode sort = SortMode.popular;
+  SortMode sort = SortMode.name;
   double volume = 70;
   String lastCountry = '';
   int parallelChecks = 16;
@@ -89,7 +89,7 @@ class AppSettings extends ChangeNotifier {
     musicOnly = _p.getBool('musicOnly') ?? true;
     hideVpn = _p.getBool('hideVpn') ?? false;
     sort = SortMode
-        .values[(_p.getInt('sort') ?? 0).clamp(0, SortMode.values.length - 1)];
+        .values[(_p.getInt('sort') ?? SortMode.name.index).clamp(0, SortMode.values.length - 1)];
     volume = _p.getDouble('volume') ?? 70;
     lastCountry = _p.getString('lastCountry') ?? '';
     parallelChecks = _p.getInt('parallelChecks') ?? 16;

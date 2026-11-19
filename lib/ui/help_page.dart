@@ -22,7 +22,7 @@ const _de = <_Section>[
     '• „Favoriten“ (Stern) und „International“ stehen immer ganz oben. Unter „International“ findest du Sender ohne festes Land, z. B. aus den kuratierten Listen.',
     '• Über dem Länder-Verzeichnis kannst du nach einem Land suchen.',
     '## Suche',
-    '• Das Feld „Sender suchen…“ durchsucht alle Länder nach Name und Genre (z. B. „jazz“, „80s“, „techno“).',
+    '• Das Feld „Sender suchen…“ sucht nach Name und Genre (z. B. „jazz“, „80s“, „techno“). Ist ein Land gewählt (z. B. Deutschland), wird nur in dessen Sendern gesucht, bei den Favoriten nur in den Favoriten. Ohne gewähltes Land wird in allen Ländern gesucht.',
     '• Mit dem ✕ im Suchfeld kommst du zurück zum gewählten Land.',
   ]),
   _Section(Icons.play_circle_rounded, 'Abspielen und Lautstärke', [
@@ -88,7 +88,8 @@ const _de = <_Section>[
     '• Darstellung: Hell, Dunkel oder wie das System. Der Mond/Sonne-Knopf oben wechselt schnell.',
     '• Sprache: Deutsch, Englisch oder wie das System.',
     '• Nur Musiksender: blendet reine Nachrichten-, Talk-, Sport- und Religionssender aus (Standard: an).',
-    '• Sortierung: beliebt, A–Z oder nach Bitrate.',
+    '• Sortierung: A–Z (Standard), beliebt oder nach Bitrate. Sie gilt für alle Listen – Länder, Favoriten und Suchergebnisse. Bei gleicher Beliebtheit oder Bitrate wird nach Namen sortiert.',
+    '• Mac: Während ein Sender spielt, geht der Mac nicht automatisch in den Ruhezustand (der Bildschirm darf trotzdem ausgehen). Wird der Mac doch schlafen gelegt (Deckel zu, Apple-Menü → Ruhezustand), verbindet sich SlaxxFM nach dem Aufwachen sofort wieder.',
     '• Parallele Stream-Prüfungen: mehr = schnelleres Aufräumen, aber mehr Netzlast.',
   ]),
   _Section(Icons.build_circle_rounded, 'Probleme lösen', [
@@ -117,7 +118,7 @@ const _en = <_Section>[
     '• "Favorites" (star) and "International" are always at the top. "International" holds stations without a fixed country, e.g. from the curated lists.',
     '• Use the field above the country list to find a country.',
     '## Search',
-    '• "Search stations…" searches all countries by name and genre (e.g. "jazz", "80s", "techno").',
+    '• "Search stations…" searches by name and genre (e.g. "jazz", "80s", "techno"). If a country is selected (e.g. Germany), only its stations are searched; in Favorites only the favorites. With no country selected, all countries are searched.',
     '• The ✕ in the search field takes you back to the selected country.',
   ]),
   _Section(Icons.play_circle_rounded, 'Playback and volume', [
@@ -183,7 +184,8 @@ const _en = <_Section>[
     '• Appearance: light, dark or system. The moon/sun button at the top switches quickly.',
     '• Language: German, English or system.',
     '• Music stations only: hides pure news, talk, sports and religious stations (default: on).',
-    '• Sorting: popular, A–Z or by bitrate.',
+    '• Sorting: A–Z (default), popular or by bitrate. It applies to every list – countries, favorites and search results. Ties in popularity or bitrate are sorted by name.',
+    '• Mac: while a station is playing the Mac does not go to idle sleep (the display may still turn off). If the Mac is put to sleep anyway (lid closed, Apple menu → Sleep), SlaxxFM reconnects right after waking up.',
     '• Parallel stream checks: more = faster clean-up, but more network load.',
   ]),
   _Section(Icons.build_circle_rounded, 'Troubleshooting', [

@@ -269,6 +269,11 @@ void main() {
       return s;
     });
   }
+  // keeps playing while idle / App Nap, reconnects after wake-up
+  if (File('macos/Runner/MainFlutterWindow.swift').existsSync()) {
+    copy('tool/macos/MainFlutterWindow.swift',
+        'macos/Runner/MainFlutterWindow.swift');
+  }
   patch('macos/Runner/Configs/AppInfo.xcconfig',
       (s) => s.replaceAll('PRODUCT_NAME = slaxxfm', 'PRODUCT_NAME = SlaxxFM'));
   // allow http:// station logos and streams

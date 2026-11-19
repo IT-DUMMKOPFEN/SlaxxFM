@@ -93,6 +93,51 @@ class PlayerService extends ChangeNotifier {
       }),
     ]);
     if (Platform.isAndroid) _initAudioSession();
+    if (Platform.isMacOS) {
+      // native side reports when the Mac wakes up from sleep
+      _locks.setMethodCallHandler((call) async {
+        if (call.method == 'wake') _onWake();
+        return null;
+      });
+    }
+  }
+
+  /// After the Mac woke up the old connection is dead: reconnect at once
+  /// instead of waiting for the watchdog.
+  void _onWake() {
+    final s = current;
+    if (!_wantPlaying || s == null || _shutDown) return;
+    _attempts = 0;
+    Future.delayed(const Duration(seconds: 2), () {
+      if (_wantPlaying && current?.id == s.id && !_shutDown) _open(s);
+    });
+  }
+
+  bool _shutDown = false;
+
+  /// Stops mpv cleanly before the app quits. Without this, mpv's core
+  /// thread may still call back into the already destroyed Flutter engine
+  /// (crash on quit, seen on macOS).
+  Future<void> shutdown() async {
+    if (_shutDown) return;
+    _shutDown = true;
+    _wantPlaying = false;
+    _metaTimer?.cancel();
+    _reconnectTimer?.cancel();
+    _stallTimer?.cancel();
+    for (final s in _subs) {
+      await s.cancel();
+    }
+    _subs.clear();
+    await _setLocks(false);
+    try {
+      await _player.stop().timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    try {
+      await _player.dispose().timeout(const Duration(seconds: 3));
+    } catch (_) {}
+    // give mpv's core thread time to finish after mpv_terminate_destroy
+    await Future.delayed(const Duration(milliseconds: 300));
   }
 
   Future<void> _configureMpv() async {
@@ -234,8 +279,10 @@ class PlayerService extends ChangeNotifier {
     await requestBatteryExemption();
   }
 
+  /// Android: wake/wifi lock. macOS: no App Nap and no idle system sleep
+  /// while playing.
   Future<void> _setLocks(bool on) async {
-    if (!Platform.isAndroid) return;
+    if (!Platform.isAndroid && !Platform.isMacOS) return;
     try {
       await _locks.invokeMethod(on ? 'acquire' : 'release');
     } catch (_) {}
@@ -484,6 +531,10 @@ class PlayerService extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_shutDown) {
+      super.dispose();
+      return;
+    }
     _metaTimer?.cancel();
     _reconnectTimer?.cancel();
     _stallTimer?.cancel();
